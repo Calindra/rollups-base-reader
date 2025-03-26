@@ -66,7 +66,6 @@ func (s *InputWritterSuite) SetupSuite() {
 
 func (s *InputWritterSuite) SetupTest() {
 	commons.ConfigureLog(slog.LevelDebug)
-	s.inputWritter = &InputRawWritter{}
 	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
 
 	// Database
