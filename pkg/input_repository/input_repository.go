@@ -3,7 +3,6 @@ package inputrepository
 import (
 	"context"
 	"fmt"
-	"log"
 
 	nodev2 "github.com/cartesi/rollups-graphql/pkg/convenience/synchronizer_node"
 	"github.com/jmoiron/sqlx"
@@ -32,7 +31,7 @@ func (i *InputRepository) WriteInput(ctx context.Context, input Input) error {
 
 	_, err := i.Db.ExecContext(ctx, query, input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status)
 	if err != nil {
-		log.Println("Error writing input", err)
+		return fmt.Errorf("error writing input: %w", err)
 	}
 
 	return nil
