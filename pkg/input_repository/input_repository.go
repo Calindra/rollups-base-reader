@@ -1,4 +1,4 @@
-package inputwritter
+package inputrepository
 
 import (
 	"context"
@@ -9,18 +9,18 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type InputRawWritter struct {
+type InputRepository struct {
 	nodev2.RawRepository
 }
 
-func NewInputRawWritter(connectionURL string, db *sqlx.DB) *InputRawWritter {
+func NewInputRepository(connectionURL string, db *sqlx.DB) *InputRepository {
 	inside := nodev2.NewRawRepository(connectionURL, db)
-	return &InputRawWritter{
+	return &InputRepository{
 		RawRepository: *inside,
 	}
 }
 
-func (i *InputRawWritter) WriteInput(ctx context.Context, input Input) error {
+func (i *InputRepository) WriteInput(ctx context.Context, input Input) error {
 	query := `INSERT INTO input (
 		epoch_application_id,
 		epoch_index,
@@ -38,7 +38,7 @@ func (i *InputRawWritter) WriteInput(ctx context.Context, input Input) error {
 	return nil
 }
 
-func (i *InputRawWritter) QueryInput(ctx context.Context, applicationId int64, index uint64) (*Input, error) {
+func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, index uint64) (*Input, error) {
 	query := `SELECT
 		epoch_application_id,
 		epoch_index,

@@ -1,4 +1,4 @@
-package inputwritter
+package inputrepository
 
 import (
 	"context"
@@ -17,13 +17,13 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-type InputWritterSuite struct {
+type InputRepositorySuite struct {
 	suite.Suite
-	inputWritter *InputRawWritter
-	ctx          context.Context
-	ctxCancel    context.CancelFunc
-	image        *postgres.PostgresContainer
-	schemaDir    string
+	inputRepository *InputRepository
+	ctx             context.Context
+	ctxCancel       context.CancelFunc
+	image           *postgres.PostgresContainer
+	schemaDir       string
 }
 
 const timeout time.Duration = 5 * time.Minute
@@ -47,7 +47,7 @@ func (lc *StdoutLogConsumer) Accept(l testcontainers.Log) {
 	slog.Debug(string(l.Content))
 }
 
-func (s *InputWritterSuite) SetupSuite() {
+func (s *InputRepositorySuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
 	s.NoError(err)
@@ -64,7 +64,7 @@ func (s *InputWritterSuite) SetupSuite() {
 	s.NoError(err)
 }
 
-func (s *InputWritterSuite) SetupTest() {
+func (s *InputRepositorySuite) SetupTest() {
 	commons.ConfigureLog(slog.LevelDebug)
 	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
 
@@ -88,33 +88,33 @@ func (s *InputWritterSuite) SetupTest() {
 	db, err := sqlx.ConnectContext(s.ctx, "postgres", connectionStr)
 	s.NoError(err)
 
-	s.inputWritter = NewInputRawWritter(connectionStr, db)
+	s.inputRepository = NewInputRepository(connectionStr, db)
 }
 
-func (s *InputWritterSuite) TearDownTest() {
+func (s *InputRepositorySuite) TearDownTest() {
 	err := s.image.Stop(s.ctx, nil)
 	s.NoError(err)
-	s.inputWritter.Db.Close()
+	s.inputRepository.Db.Close()
 	s.ctxCancel()
 }
 
-func (s *InputWritterSuite) TestWriteInput() {
+func (s *InputRepositorySuite) TestInputRepository() {
 	input := Input{
-		EpochApplicationID: 1, // existing app
-		EpochIndex:         23, // add to actual epoch
+		EpochApplicationID: 1,   // existing app
+		EpochIndex:         23,  // add to actual epoch
 		Index:              171, // unique index
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
 		Status:             InputCompletionStatus_Accepted,
 	}
-	err := s.inputWritter.WriteInput(s.ctx, input)
+	err := s.inputRepository.WriteInput(s.ctx, input)
 	s.NoError(err)
 
-	inputDb, err := s.inputWritter.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
+	inputDb, err := s.inputRepository.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
 	s.NoError(err)
 	s.Equal(input.EpochApplicationID, inputDb.EpochApplicationID)
 }
 
-func TestInputterWritterTestSuite(t *testing.T) {
-	suite.Run(t, new(InputWritterSuite))
+func TestInputRepositorySuite(t *testing.T) {
+	suite.Run(t, new(InputRepositorySuite))
 }

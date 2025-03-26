@@ -1,4 +1,4 @@
-package inputwritter
+package inputrepository
 
 // Inspired from https://github.com/cartesi/rollups-node/blob/c748b205fe35f217868d98e8e64909afdd11d9af/internal/model/models.go
 
