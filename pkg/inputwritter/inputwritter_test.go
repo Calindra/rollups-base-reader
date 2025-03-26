@@ -101,19 +101,19 @@ func (s *InputWritterSuite) TearDownTest() {
 
 func (s *InputWritterSuite) TestWriteInput() {
 	input := Input{
-		EpochApplicationID: 99,
-		EpochIndex:         1,
-		Index:              1,
-		BlockNumber:        1,
+		EpochApplicationID: 1, // existing app
+		EpochIndex:         23, // add to actual epoch
+		Index:              171, // unique index
+		BlockNumber:        0,
 		RawData:            []byte("test data"),
+		Status:             InputCompletionStatus_Accepted,
 	}
 	err := s.inputWritter.WriteInput(s.ctx, input)
 	s.NoError(err)
 
-	// inputs, err := s.inputWritter.FindAllRawInputs(s.ctx)
-	// s.NoError(err)
-	// s.Equal(1, len(inputs), "expected 1 input")
-	// s.Equal(input.EpochApplicationID, inputs[0].ApplicationAddress)
+	inputDb, err := s.inputWritter.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
+	s.NoError(err)
+	s.Equal(input.EpochApplicationID, inputDb.EpochApplicationID)
 }
 
 func TestInputterWritterTestSuite(t *testing.T) {
