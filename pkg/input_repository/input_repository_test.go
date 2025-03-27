@@ -125,6 +125,20 @@ func (s *InputRepositorySuite) TestInputWrongIndex() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
+	err := s.inputRepository.WriteInput(s.ctx, input)
+	s.Error(err)
+}
+
+func (s *InputRepositorySuite) TestSafeInputWrongIndex() {
+	input := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              1,
+		BlockNumber:        0,
+		RawData:            []byte("test data"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+
 	err := s.inputRepository.SafeWriteInput(s.ctx, input)
 	s.Error(err)
 }
@@ -139,11 +153,39 @@ func (s *InputRepositorySuite) TestInputWrongEpoch() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
+	err := s.inputRepository.WriteInput(s.ctx, input)
+	s.Error(err)
+}
+
+func (s *InputRepositorySuite) TestSafeInputWrongEpoch() {
+	input := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         999, // non-existent epoch
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+
 	err := s.inputRepository.SafeWriteInput(s.ctx, input)
 	s.Error(err)
 }
 
 func (s *InputRepositorySuite) TestInputWrongApplication() {
+	input := Input{
+		EpochApplicationID: 999, // non-existent application
+		EpochIndex:         23,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+
+	err := s.inputRepository.WriteInput(s.ctx, input)
+	s.Error(err)
+}
+
+func (s *InputRepositorySuite) TestSafeInputWrongApplication() {
 	input := Input{
 		EpochApplicationID: 999, // non-existent application
 		EpochIndex:         23,
