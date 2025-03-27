@@ -28,10 +28,36 @@ func (i *InputRepository) WriteInput(ctx context.Context, input Input) error {
 		raw_data,
 		status
 	) VALUES ($1, $2, $3, $4, $5, $6)`
+	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status}
 
-	_, err := i.Db.ExecContext(ctx, query, input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status)
+	// Create a prepared statement in Database
+	stmt, err := i.Db.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("error preparing input query: %w", err)
+	}
+	defer stmt.Close()
+
+	// Start a transaction
+	tx, err := i.Db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	// Rollback the transaction if there is an error
+	defer tx.Rollback()
+
+	// Create a prepared statement in transaction
+	stmtTx := tx.StmtContext(ctx, stmt)
+	defer stmtTx.Close()
+
+	// Execute the query
+	_, err = stmtTx.ExecContext(ctx, args...)
 	if err != nil {
 		return fmt.Errorf("error writing input: %w", err)
+	}
+
+	// Commit the transaction
+	if commitErr := tx.Commit(); commitErr != nil {
+		return fmt.Errorf("error committing transaction: %w", commitErr)
 	}
 
 	return nil
@@ -49,12 +75,21 @@ func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, i
 		updated_at
 	FROM input
 	WHERE epoch_application_id = $1 AND index = $2`
+	args := []any{applicationId, index}
+
+	// Create a prepared statement
+	stmt, err := i.Db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
 
 	input := Input{}
-	row := i.Db.QueryRowContext(ctx, query, applicationId, index)
+	row := stmt.QueryRowContext(ctx, args...)
 	if row == nil {
 		return nil, fmt.Errorf("input not found")
 	}
-	err := row.Scan(&input.EpochApplicationID, &input.EpochIndex, &input.Index, &input.BlockNumber, &input.RawData, &input.Status, &input.CreatedAt, &input.UpdatedAt)
+	err = row.Scan(&input.EpochApplicationID, &input.EpochIndex, &input.Index, &input.BlockNumber, &input.RawData, &input.Status, &input.CreatedAt, &input.UpdatedAt)
+
 	return &input, err
 }

@@ -115,6 +115,27 @@ func (s *InputRepositorySuite) TestInputRepository() {
 	s.Equal(input.EpochApplicationID, inputDb.EpochApplicationID)
 }
 
+func (s *InputRepositorySuite) TestInputRepository2() {
+	for i := 171; i < 175; i++ {
+		input := Input{
+			EpochApplicationID: 1,         // existing app
+			EpochIndex:         23,        // add to actual epoch
+			Index:              uint64(i), // unique index
+			BlockNumber:        0,
+			RawData:            []byte("test data"),
+			Status:             InputCompletionStatus_Accepted,
+		}
+		go (func(input Input) {
+			err := s.inputRepository.WriteInput(s.ctx, input)
+			s.NoError(err)
+
+			inputDb, err := s.inputRepository.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
+			s.NoError(err)
+			s.Equal(input.EpochApplicationID, inputDb.EpochApplicationID)
+		})(input)
+	}
+}
+
 func TestInputRepositorySuite(t *testing.T) {
 	suite.Run(t, new(InputRepositorySuite))
 }
