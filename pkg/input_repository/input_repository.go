@@ -5,7 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
+	"strings"
 
+	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
 	nodev2 "github.com/cartesi/rollups-graphql/pkg/convenience/synchronizer_node"
 	"github.com/jmoiron/sqlx"
 )
@@ -25,7 +29,7 @@ func NewInputRepository(connectionURL string, db *sqlx.DB) *InputRepository {
 	}
 }
 
-func (i *InputRepository) applicationExists(ctx context.Context, input Input, tx *sql.Tx) (bool, error) {
+func (i *InputRepository) applicationExists(ctx context.Context, input Input, tx *sqlx.Tx) (bool, error) {
 	applicationId := input.EpochApplicationID
 
 	query := `SELECT EXISTS (
@@ -37,14 +41,14 @@ func (i *InputRepository) applicationExists(ctx context.Context, input Input, tx
 	var exists bool
 
 	// Create a prepared statement
-	stmt, err := tx.PrepareContext(ctx, query)
+	stmt, err := tx.PreparexContext(ctx, query)
 	if err != nil {
 		return false, fmt.Errorf("error preparing application exists query: %w", err)
 	}
 	defer stmt.Close()
 
 	// Execute the query
-	err = stmt.QueryRowContext(ctx, args...).Scan(&exists)
+	err = stmt.GetContext(ctx, &exists, args...)
 	if err != nil {
 		return false, fmt.Errorf("error checking if application exists: %w", err)
 	}
@@ -52,24 +56,25 @@ func (i *InputRepository) applicationExists(ctx context.Context, input Input, tx
 	return exists, nil
 }
 
-func (i *InputRepository) isEpochWithinBounds(ctx context.Context, input Input, tx *sql.Tx) (bool, error) {
+func (i *InputRepository) isEpochWithinBounds(ctx context.Context, input Input, tx *sqlx.Tx) (bool, error) {
 	epochIndex := input.EpochIndex
 	query := `SELECT EXISTS (
 		SELECT 1
 		FROM epoch
 		WHERE index >= $1 AND index <= (SELECT MAX(index) + 1 FROM epoch)
 	)`
+	args := []any{epochIndex}
 	var withinBounds bool
 
 	// Create a prepared statement
-	stmt, err := tx.PrepareContext(ctx, query)
+	stmt, err := tx.PreparexContext(ctx, query)
 	if err != nil {
 		return false, fmt.Errorf("error preparing epoch bounds query: %w", err)
 	}
 	defer stmt.Close()
 
 	// Execute the query
-	err = stmt.QueryRowContext(ctx, epochIndex).Scan(&withinBounds)
+	err = stmt.GetContext(ctx, &withinBounds, args...)
 	if err != nil {
 		return false, fmt.Errorf("error checking if epoch is within bounds: %w", err)
 	}
@@ -78,7 +83,7 @@ func (i *InputRepository) isEpochWithinBounds(ctx context.Context, input Input, 
 }
 
 func (i *InputRepository) SafeWriteInput(stdCtx context.Context, input Input) error {
-	tx, err := i.Db.BeginTx(stdCtx, nil)
+	tx, err := i.Db.BeginTxx(stdCtx, nil)
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
@@ -115,10 +120,92 @@ func (i *InputRepository) SafeWriteInput(stdCtx context.Context, input Input) er
 	return err
 }
 
+func transformToInputQuery(
+	filter []*model.ConvenienceFilter,
+) (string, []any, int, error) {
+	query := ""
+	if len(filter) > 0 {
+		query += repository.WHERE
+	}
+	args := []any{}
+	where := []string{}
+	count := 1
+	for _, filter := range filter {
+		if *filter.Field == repository.INDEX_FIELD {
+			if filter.Eq != nil {
+				where = append(where, fmt.Sprintf("index = $%d ", count))
+				args = append(args, *filter.Eq)
+				count += 1
+			} else if filter.Gt != nil {
+				where = append(where, fmt.Sprintf("index > $%d ", count))
+				args = append(args, *filter.Gt)
+				count += 1
+			} else if filter.Lt != nil {
+				where = append(where, fmt.Sprintf("index < $%d ", count))
+				args = append(args, *filter.Lt)
+				count += 1
+			} else {
+				return "", nil, 0, fmt.Errorf("operation not implemented")
+			}
+		} else if *filter.Field == model.STATUS_PROPERTY {
+			if filter.Ne != nil {
+				where = append(where, fmt.Sprintf("status <> $%d ", count))
+				args = append(args, *filter.Ne)
+				count += 1
+			} else if filter.Eq != nil {
+				where = append(where, fmt.Sprintf("status = $%d ", count))
+				args = append(args, *filter.Eq)
+				count += 1
+			} else {
+				return "", nil, 0, fmt.Errorf("operation not implemented")
+			}
+		} else if *filter.Field == model.APP_ID {
+			if filter.Eq != nil {
+				where = append(where, fmt.Sprintf("epoch_application_id = $%d ", count))
+				args = append(args, *filter.Eq)
+				count += 1
+			} else {
+				return "", nil, 0, fmt.Errorf("operation not implemented field epoch_application_id")
+			}
+		} else {
+			return "", nil, 0, fmt.Errorf("unexpected field %s", *filter.Field)
+		}
+	}
+	query += strings.Join(where, " and ")
+	return query, args, count, nil
+}
+
+func (i *InputRepository) Count(
+	ctx context.Context,
+	filter []*model.ConvenienceFilter,
+) (uint64, error) {
+	query := `SELECT count(*) FROM input `
+	where, args, _, err := transformToInputQuery(filter)
+	if err != nil {
+		slog.Error("Count execution error", "err", err)
+		return 0, err
+	}
+	query += where
+	slog.Debug("Query", "query", query, "args", args)
+	stmt, err := i.Db.PreparexContext(ctx, query)
+	if err != nil {
+		slog.Error("Count execution error")
+		return 0, err
+	}
+	defer stmt.Close()
+	var count uint64
+	err = stmt.GetContext(ctx, &count, args...)
+	if err != nil {
+		slog.Error("Count execution error")
+		return 0, err
+	}
+	return count, nil
+}
+
 func (i *InputRepository) WriteInput(ctx context.Context, input Input) error {
 	var (
 		err error
-		tx  *sql.Tx
+		tx  *sqlx.Tx
 	)
 
 	query := `INSERT INTO input (
@@ -132,10 +219,10 @@ func (i *InputRepository) WriteInput(ctx context.Context, input Input) error {
 	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status}
 
 	// Check if the transaction is already started
-	tx, ok := ctx.Value(txKey).(*sql.Tx)
+	tx, ok := ctx.Value(txKey).(*sqlx.Tx)
 	if !ok {
 		// Start a transaction
-		tx, err = i.Db.BeginTx(ctx, nil)
+		tx, err = i.Db.BeginTxx(ctx, nil)
 		if err != nil {
 			return fmt.Errorf("error starting transaction: %w", err)
 		}
@@ -144,7 +231,7 @@ func (i *InputRepository) WriteInput(ctx context.Context, input Input) error {
 	defer tx.Rollback()
 
 	// Create a prepared statement in transaction
-	stmt, err := tx.PrepareContext(ctx, query)
+	stmt, err := tx.PreparexContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("error preparing input query: %w", err)
 	}
@@ -179,15 +266,14 @@ func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, i
 	args := []any{applicationId, index}
 
 	// Create a prepared statement
-	stmt, err := i.Db.PrepareContext(ctx, query)
+	stmt, err := i.Db.PreparexContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
 	input := Input{}
-	row := stmt.QueryRowContext(ctx, args...)
-	err = row.Scan(&input.EpochApplicationID, &input.EpochIndex, &input.Index, &input.BlockNumber, &input.RawData, &input.Status, &input.CreatedAt, &input.UpdatedAt)
+	err = stmt.GetContext(ctx, &input, args...)
 
 	return &input, err
 }

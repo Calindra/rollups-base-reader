@@ -2,6 +2,7 @@ package inputrepository
 
 import (
 	"context"
+	"database/sql"
 	"io"
 	"log/slog"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
+	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
@@ -196,6 +198,119 @@ func (s *InputRepositorySuite) TestSafeInputWrongApplication() {
 	}
 
 	err := s.inputRepository.SafeWriteInput(s.ctx, input)
+	s.Error(err)
+}
+
+func (s *InputRepositorySuite) TestQueryInputWrongApplicationIndex() {
+	var (
+		applicationId int64  = 999 // non-existent application
+		index         uint64 = 171 // non-existent index
+	)
+	_, err := s.inputRepository.QueryInput(s.ctx, applicationId, index)
+	s.Error(err)
+	s.ErrorIs(err, sql.ErrNoRows)
+}
+
+func (s *InputRepositorySuite) TestCountPreInputs() {
+	field := model.APP_ID
+	value := "1"
+	filter := []*model.ConvenienceFilter{
+		{
+			Field: &field,
+			Eq:    &value,
+		},
+	}
+	preCount, err := s.inputRepository.Count(s.ctx, filter)
+	s.NoError(err)
+	s.Equal(uint64(101), preCount)
+}
+
+func (s *InputRepositorySuite) TestCountInputs() {
+	// Insert test data
+	input1 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data 1"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+	input2 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              172,
+		BlockNumber:        0,
+		RawData:            []byte("test data 2"),
+		Status:             InputCompletionStatus_Rejected,
+	}
+	err := s.inputRepository.WriteInput(s.ctx, input1)
+	s.NoError(err)
+	err = s.inputRepository.WriteInput(s.ctx, input2)
+	s.NoError(err)
+
+	// Test counting all inputs
+	count, err := s.inputRepository.Count(s.ctx, nil)
+	s.NoError(err)
+	s.Equal(uint64(103), count)
+
+	field := "Status"
+	value := InputCompletionStatus_Accepted.String()
+
+	// Test counting inputs with specific status
+	filter := []*model.ConvenienceFilter{
+		{
+			Field: &field,
+			Eq:    &value,
+		},
+	}
+	count, err = s.inputRepository.Count(s.ctx, filter)
+	s.NoError(err)
+	s.Equal(uint64(102), count)
+}
+
+func (s *InputRepositorySuite) TestCountWrongStatusInputs() {
+	field := model.STATUS_PROPERTY
+	value := "CARTESI"
+
+	// Test counting inputs with non-existent status
+	filter := []*model.ConvenienceFilter{
+		{
+			Field: &field,
+			Eq:    &value,
+		},
+	}
+	_, err := s.inputRepository.Count(s.ctx, filter)
+	s.Error(err)
+}
+
+func (s *InputRepositorySuite) TestCountWrongAppIdInputs() {
+	field := model.APP_ID
+	value := "999" // non-existent application
+
+	// Test counting inputs with non-existent status
+	filter := []*model.ConvenienceFilter{
+		{
+			Field: &field,
+			Eq:    &value,
+		},
+	}
+	count, err := s.inputRepository.Count(s.ctx, filter)
+	s.NoError(err)
+	s.Equal(uint64(0), count)
+}
+
+func (s *InputRepositorySuite) TestCountWrongFieldInputs() {
+	field := model.APP_CONTRACT
+	value := "0xdeadbeef" // non-existent application
+
+	// Test counting inputs with non-existent status
+	filter := []*model.ConvenienceFilter{
+		{
+			Field: &field,
+			Eq:    &value,
+		},
+	}
+	_, err := s.inputRepository.Count(s.ctx, filter)
 	s.Error(err)
 }
 
