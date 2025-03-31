@@ -10,7 +10,6 @@ import (
 
 	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
-	nodev2 "github.com/cartesi/rollups-graphql/pkg/convenience/synchronizer_node"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -19,14 +18,11 @@ type staticstring string
 const txKey staticstring = "safeTxWriteInput"
 
 type InputRepository struct {
-	nodev2.RawRepository
+	Db *sqlx.DB
 }
 
-func NewInputRepository(connectionURL string, db *sqlx.DB) *InputRepository {
-	inside := nodev2.NewRawRepository(connectionURL, db)
-	return &InputRepository{
-		RawRepository: *inside,
-	}
+func NewInputRepository(db *sqlx.DB) *InputRepository {
+	return &InputRepository{db}
 }
 
 func (i *InputRepository) applicationExists(ctx context.Context, input Input, tx *sqlx.Tx) (bool, error) {

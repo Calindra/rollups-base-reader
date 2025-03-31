@@ -90,7 +90,7 @@ func (s *InputRepositorySuite) SetupTest() {
 	db, err := sqlx.ConnectContext(s.ctx, "postgres", connectionStr)
 	s.NoError(err)
 
-	s.inputRepository = NewInputRepository(connectionStr, db)
+	s.inputRepository = NewInputRepository(db)
 }
 
 func (s *InputRepositorySuite) TearDownTest() {
