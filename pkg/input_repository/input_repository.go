@@ -131,7 +131,8 @@ func transformToInputQuery(
 	where := []string{}
 	count := 1
 	for _, filter := range filter {
-		if *filter.Field == repository.INDEX_FIELD {
+		switch *filter.Field {
+		case repository.INDEX_FIELD:
 			if filter.Eq != nil {
 				where = append(where, fmt.Sprintf("index = $%d ", count))
 				args = append(args, *filter.Eq)
@@ -147,7 +148,7 @@ func transformToInputQuery(
 			} else {
 				return "", nil, 0, fmt.Errorf("operation not implemented")
 			}
-		} else if *filter.Field == model.STATUS_PROPERTY {
+		case model.STATUS_PROPERTY:
 			if filter.Ne != nil {
 				where = append(where, fmt.Sprintf("status <> $%d ", count))
 				args = append(args, *filter.Ne)
@@ -159,7 +160,7 @@ func transformToInputQuery(
 			} else {
 				return "", nil, 0, fmt.Errorf("operation not implemented")
 			}
-		} else if *filter.Field == model.APP_ID {
+		case model.APP_ID:
 			if filter.Eq != nil {
 				where = append(where, fmt.Sprintf("epoch_application_id = $%d ", count))
 				args = append(args, *filter.Eq)
@@ -167,7 +168,7 @@ func transformToInputQuery(
 			} else {
 				return "", nil, 0, fmt.Errorf("operation not implemented field epoch_application_id")
 			}
-		} else {
+		default:
 			return "", nil, 0, fmt.Errorf("unexpected field %s", *filter.Field)
 		}
 	}
