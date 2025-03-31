@@ -42,7 +42,7 @@ func (e *InputCompletionStatus) Scan(value any) error {
 	case []byte:
 		enumValue = string(val)
 	default:
-		return errors.New("Invalid value for InputCompletionStatus enum. Enum value has to be of type string or []byte")
+		return errors.New("invalid value for InputCompletionStatus enum. Enum value has to be of type string or []byte")
 	}
 
 	switch enumValue {

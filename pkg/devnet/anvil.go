@@ -137,7 +137,7 @@ func (w AnvilWorker) Start(ctx context.Context, ready chan<- struct{}) error {
 		w.AnvilCmd = anvilCommand
 	}
 
-	var seconds uint64 = uint64(w.AnvilBlockTime.Seconds())
+	seconds := uint64(w.AnvilBlockTime.Seconds())
 
 	var server supervisor.ServerWorker
 	server.Name = anvilCommand
