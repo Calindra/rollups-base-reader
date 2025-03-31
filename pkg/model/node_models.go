@@ -1,5 +1,5 @@
 // Code generated from GitHub. DO NOT EDIT.
-// Source: https://raw.githubusercontent.com/cartesi/rollups-node/next/2.0/internal/model/models.go
+// Source: https://raw.githubusercontent.com/cartesi/rollups-node/d8063929ef309df6925ff45883cce482ec3d9e18/internal/model/models.go
 
 // (c) Cartesi and individual authors (see AUTHORS)
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
