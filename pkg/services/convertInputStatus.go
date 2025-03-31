@@ -1,4 +1,4 @@
-package repository
+package services
 
 import (
 	"github.com/calindra/rollups-base-reader/pkg/model"

@@ -10,7 +10,6 @@ import (
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -114,22 +113,7 @@ func (i *InputRepository) Count(
 	return count, nil
 }
 
-func (i *InputRepository) convertAdvanceInputToInputNode(cInput cModel.AdvanceInput) (*model.Input, error) {
-	input := &model.Input{
-		Index: uint64(cInput.Index),
-		BlockNumber: cInput.BlockNumber,
-		RawData: []byte(cInput.Payload),
-		Status: ConvertInputStatus(cInput.Status),
-		MachineHash: nil,
-		OutputsHash: nil,
-		TransactionReference: common.HexToHash(cInput.CartesiTransactionId),
-		SnapshotURI: nil,
-	}
-
-	return input, nil
-}
-
-func (i *InputRepository) RawCreate(ctx context.Context, input model.Input) error {
+func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 	var (
 		err error
 		tx  *sqlx.Tx
@@ -178,18 +162,6 @@ func (i *InputRepository) RawCreate(ctx context.Context, input model.Input) erro
 	return nil
 }
 
-func (i *InputRepository) Create(ctx context.Context, cInput cModel.AdvanceInput) (*cModel.AdvanceInput, error) {
-	input, err := i.convertAdvanceInputToInputNode(cInput)
-	if err != nil {
-		return nil, fmt.Errorf("error converting input to node: %w", err)
-	}
-	err = i.RawCreate(ctx, *input)
-	if err != nil {
-		return nil, fmt.Errorf("error creating input: %w", err)
-	}
-	return &cInput, nil
-}
-
 func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, index uint64) (*model.Input, error) {
 	query := `SELECT
 		epoch_application_id,
@@ -212,7 +184,8 @@ func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, i
 	defer stmt.Close()
 
 	input := &model.Input{}
-	err = stmt.GetContext(ctx, input, args...)
+	row := stmt.QueryRowxContext(ctx, args...)
+	err = row.Scan(&input.EpochApplicationID, &input.EpochIndex, &input.Index, &input.BlockNumber, &input.RawData, &input.Status, &input.CreatedAt, &input.UpdatedAt)
 
 	if err != nil {
 		return nil, err
@@ -268,10 +241,29 @@ func (i *InputRepository) FindAll(
 	defer stmt.Close()
 
 	var inputs []model.Input
-	err = stmt.SelectContext(ctx, &inputs, args...)
+	rows, err := stmt.QueryxContext(ctx, args...)
 	if err != nil {
-		return nil, fmt.Errorf("error executing find all query: %w", err)
+		return nil, err
 	}
+	defer rows.Close()
+	for rows.Next() {
+		var input model.Input
+		err = rows.Scan(&input.EpochApplicationID, &input.EpochIndex, &input.Index, &input.BlockNumber, &input.RawData, &input.Status, &input.CreatedAt, &input.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning input row: %w", err)
+		}
+		inputs = append(inputs, input)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %w", err)
+	}
+
+	// err = stmt.SelectContext(ctx, &inputs, args...)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error executing find all query: %w", err)
+	// }
 
 	pageResult := &commons.PageResult[model.Input]{
 		Rows:   inputs,

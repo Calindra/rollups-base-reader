@@ -18,7 +18,8 @@ import (
 
 const (
 	// URL of the models.go file in GitHub
-	modelsURL = "https://raw.githubusercontent.com/cartesi/rollups-node/next/2.0/internal/model/models.go"
+	// modelsURL = "https://raw.githubusercontent.com/cartesi/rollups-node/next/2.0/internal/model/models.go"
+	modelsURL = "https://raw.githubusercontent.com/cartesi/rollups-node/d8063929ef309df6925ff45883cce482ec3d9e18/internal/model/models.go"
 	// Local destination path
 	localPath = "node_models.go"
 )

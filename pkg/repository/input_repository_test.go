@@ -111,7 +111,7 @@ func (s *InputRepositorySuite) TestInputRepository() {
 		RawData:            []byte("test data"),
 		Status:             model.InputCompletionStatus_Accepted,
 	}
-	err := s.inputRepository.RawCreate(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.NoError(err)
 
 	inputDb, err := s.inputRepository.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
@@ -129,7 +129,7 @@ func (s *InputRepositorySuite) TestInputWrongIndex() {
 		Status:             model.InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.RawCreate(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.Error(err)
 }
 
@@ -143,7 +143,7 @@ func (s *InputRepositorySuite) TestInputWrongEpoch() {
 		Status:             model.InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.RawCreate(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.Error(err)
 }
 
@@ -157,7 +157,7 @@ func (s *InputRepositorySuite) TestInputWrongApplication() {
 		Status:             model.InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.RawCreate(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.Error(err)
 }
 
@@ -203,9 +203,9 @@ func (s *InputRepositorySuite) TestCountInputs() {
 		RawData:            []byte("test data 2"),
 		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.RawCreate(s.ctx, input1)
+	err := s.inputRepository.Create(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.RawCreate(s.ctx, input2)
+	err = s.inputRepository.Create(s.ctx, input2)
 	s.NoError(err)
 
 	// Test counting all inputs
@@ -292,9 +292,9 @@ func (s *InputRepositorySuite) TestFindAllInputsCount() {
 		RawData:            []byte("test data 2"),
 		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.RawCreate(s.ctx, input1)
+	err := s.inputRepository.Create(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.RawCreate(s.ctx, input2)
+	err = s.inputRepository.Create(s.ctx, input2)
 	s.NoError(err)
 
 	// Test finding all inputs
@@ -321,9 +321,9 @@ func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 		RawData:            []byte("test data 2"),
 		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.RawCreate(s.ctx, input1)
+	err := s.inputRepository.Create(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.RawCreate(s.ctx, input2)
+	err = s.inputRepository.Create(s.ctx, input2)
 	s.NoError(err)
 
 	// Test finding inputs with a specific status
@@ -359,9 +359,9 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 		RawData:            []byte("test data 2"),
 		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.RawCreate(s.ctx, input1)
+	err := s.inputRepository.Create(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.RawCreate(s.ctx, input2)
+	err = s.inputRepository.Create(s.ctx, input2)
 	s.NoError(err)
 
 	// Test finding inputs with limit and offset
