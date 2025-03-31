@@ -7,3 +7,13 @@ timeout = "5m"
 print-linter-name = true
 print-issued-lines = true
 colors = true
+
+[linters]
+settings.errcheck.exclude-functions = [
+    "(io.Closer).Close",
+    "(net.Conn).Close",
+    "(*os.File).Close",
+    "(*compress/gzip.Reader).Close",
+    "(*database/sql.DB).Close",
+    "(*github.com/calindra/rollups-base-reader/pkg/contracts.InputBoxInputAddedIterator).Close"
+]
