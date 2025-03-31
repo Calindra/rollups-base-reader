@@ -2,15 +2,15 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
 
+	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/cartesi/rollups-graphql/pkg/commons"
-	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -31,46 +31,8 @@ func NewInputRepository(db *sqlx.DB) *InputRepository {
 	return &InputRepository{db, appRepo, epochRepo}
 }
 
-func (i *InputRepository) SafeCreate(stdCtx context.Context, input Input) error {
-	tx, err := i.Db.BeginTxx(stdCtx, nil)
-	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
-	}
-	defer tx.Rollback()
-	ctx := context.WithValue(stdCtx, txKey, tx)
-
-	exists, err := i.AppRepository.Exists(ctx, input.EpochApplicationID, tx)
-	if err != nil {
-		return fmt.Errorf("error checking if application exists: %w", err)
-	}
-	if !exists {
-		return fmt.Errorf("application with id %d does not exist", input.EpochApplicationID)
-	}
-	withinBounds, err := i.EpochRepository.isWithinBounds(ctx, input, tx)
-	if err != nil {
-		return fmt.Errorf("error checking if epoch is within bounds: %w", err)
-	}
-	if !withinBounds {
-		return fmt.Errorf("epoch %d is not within bounds", input.EpochIndex)
-	}
-
-	// Check if the input already exists
-	inputDB, err := i.QueryInput(ctx, input.EpochApplicationID, input.Index)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return i.Create(ctx, input)
-		}
-		return err
-	}
-	if inputDB != nil {
-		return fmt.Errorf("input with index %d already exists", input.Index)
-	}
-
-	return err
-}
-
 func transformToInputQuery(
-	filter []*model.ConvenienceFilter,
+	filter []*cModel.ConvenienceFilter,
 ) (string, []any, int, error) {
 	query := ""
 	if len(filter) > 0 {
@@ -97,7 +59,7 @@ func transformToInputQuery(
 			} else {
 				return "", nil, 0, fmt.Errorf("operation not implemented")
 			}
-		case model.STATUS_PROPERTY:
+		case cModel.STATUS_PROPERTY:
 			if filter.Ne != nil {
 				where = append(where, fmt.Sprintf("status <> $%d ", count))
 				args = append(args, *filter.Ne)
@@ -109,7 +71,7 @@ func transformToInputQuery(
 			} else {
 				return "", nil, 0, fmt.Errorf("operation not implemented")
 			}
-		case model.APP_ID:
+		case cModel.APP_ID:
 			if filter.Eq != nil {
 				where = append(where, fmt.Sprintf("epoch_application_id = $%d ", count))
 				args = append(args, *filter.Eq)
@@ -127,7 +89,7 @@ func transformToInputQuery(
 
 func (i *InputRepository) Count(
 	ctx context.Context,
-	filter []*model.ConvenienceFilter,
+	filter []*cModel.ConvenienceFilter,
 ) (uint64, error) {
 	query := `SELECT count(*) FROM input `
 	where, args, _, err := transformToInputQuery(filter)
@@ -152,19 +114,22 @@ func (i *InputRepository) Count(
 	return count, nil
 }
 
-func (i *InputRepository) AdvanceInputToInput(advanceInput model.AdvanceInput) Input {
-	panic("not implemented")
-	// return Input{
-	// 	EpochApplicationID: advanceInput.AppContract.Hex(),
-	// 	EpochIndex:         advanceInput.Index,
-	// 	Index:              advanceInput.Index,
-	// 	BlockNumber:        advanceInput.BlockNumber,
-	// 	RawData:            advanceInput.Payload,
-	// 	Status:             advanceInput.Status,
-	// }
+func (i *InputRepository) convertAdvanceInputToInputNode(cInput cModel.AdvanceInput) (*model.Input, error) {
+	input := &model.Input{
+		Index: uint64(cInput.Index),
+		BlockNumber: cInput.BlockNumber,
+		RawData: []byte(cInput.Payload),
+		Status: ConvertInputStatus(cInput.Status),
+		MachineHash: nil,
+		OutputsHash: nil,
+		TransactionReference: common.HexToHash(cInput.CartesiTransactionId),
+		SnapshotURI: nil,
+	}
+
+	return input, nil
 }
 
-func (i *InputRepository) Create(ctx context.Context, input Input) error {
+func (i *InputRepository) RawCreate(ctx context.Context, input model.Input) error {
 	var (
 		err error
 		tx  *sqlx.Tx
@@ -213,7 +178,19 @@ func (i *InputRepository) Create(ctx context.Context, input Input) error {
 	return nil
 }
 
-func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, index uint64) (*Input, error) {
+func (i *InputRepository) Create(ctx context.Context, cInput cModel.AdvanceInput) (*cModel.AdvanceInput, error) {
+	input, err := i.convertAdvanceInputToInputNode(cInput)
+	if err != nil {
+		return nil, fmt.Errorf("error converting input to node: %w", err)
+	}
+	err = i.RawCreate(ctx, *input)
+	if err != nil {
+		return nil, fmt.Errorf("error creating input: %w", err)
+	}
+	return &cInput, nil
+}
+
+func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, index uint64) (*model.Input, error) {
 	query := `SELECT
 		epoch_application_id,
 		epoch_index,
@@ -234,7 +211,7 @@ func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, i
 	}
 	defer stmt.Close()
 
-	input := &Input{}
+	input := &model.Input{}
 	err = stmt.GetContext(ctx, input, args...)
 
 	if err != nil {
@@ -250,8 +227,8 @@ func (i *InputRepository) FindAll(
 	last *int,
 	after *string,
 	before *string,
-	filter []*model.ConvenienceFilter,
-) (*commons.PageResult[Input], error) {
+	filter []*cModel.ConvenienceFilter,
+) (*commons.PageResult[model.Input], error) {
 	total, err := i.Count(ctx, filter)
 	if err != nil {
 		slog.Error("database error", "err", err)
@@ -290,13 +267,13 @@ func (i *InputRepository) FindAll(
 	}
 	defer stmt.Close()
 
-	var inputs []Input
+	var inputs []model.Input
 	err = stmt.SelectContext(ctx, &inputs, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error executing find all query: %w", err)
 	}
 
-	pageResult := &commons.PageResult[Input]{
+	pageResult := &commons.PageResult[model.Input]{
 		Rows:   inputs,
 		Total:  total,
 		Offset: uint64(offset),

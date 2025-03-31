@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,7 +16,7 @@ func NewEpochRepository(db *sqlx.DB) *EpochRepository {
 	return &EpochRepository{db}
 }
 
-func (e *EpochRepository) isWithinBounds(ctx context.Context, input Input, tx *sqlx.Tx) (bool, error) {
+func (e *EpochRepository) isWithinBounds(ctx context.Context, input model.Input, tx *sqlx.Tx) (bool, error) {
 	epochIndex := input.EpochIndex
 	query := `SELECT EXISTS (
 		SELECT 1

@@ -12,7 +12,8 @@ import (
 	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
-	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	"github.com/calindra/rollups-base-reader/pkg/model"
+	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
@@ -102,15 +103,15 @@ func (s *InputRepositorySuite) TearDownTest() {
 }
 
 func (s *InputRepositorySuite) TestInputRepository() {
-	input := Input{
+	input := model.Input{
 		EpochApplicationID: 1,   // existing app
 		EpochIndex:         23,  // add to actual epoch
 		Index:              171, // unique index
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
-	err := s.inputRepository.Create(s.ctx, input)
+	err := s.inputRepository.RawCreate(s.ctx, input)
 	s.NoError(err)
 
 	inputDb, err := s.inputRepository.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
@@ -119,86 +120,44 @@ func (s *InputRepositorySuite) TestInputRepository() {
 }
 
 func (s *InputRepositorySuite) TestInputWrongIndex() {
-	input := Input{
+	input := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              1,
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.Create(s.ctx, input)
-	s.Error(err)
-}
-
-func (s *InputRepositorySuite) TestSafeInputWrongIndex() {
-	input := Input{
-		EpochApplicationID: 1,
-		EpochIndex:         23,
-		Index:              1,
-		BlockNumber:        0,
-		RawData:            []byte("test data"),
-		Status:             InputCompletionStatus_Accepted,
-	}
-
-	err := s.inputRepository.SafeCreate(s.ctx, input)
+	err := s.inputRepository.RawCreate(s.ctx, input)
 	s.Error(err)
 }
 
 func (s *InputRepositorySuite) TestInputWrongEpoch() {
-	input := Input{
+	input := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         999, // non-existent epoch
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.Create(s.ctx, input)
-	s.Error(err)
-}
-
-func (s *InputRepositorySuite) TestSafeInputWrongEpoch() {
-	input := Input{
-		EpochApplicationID: 1,
-		EpochIndex:         999, // non-existent epoch
-		Index:              171,
-		BlockNumber:        0,
-		RawData:            []byte("test data"),
-		Status:             InputCompletionStatus_Accepted,
-	}
-
-	err := s.inputRepository.SafeCreate(s.ctx, input)
+	err := s.inputRepository.RawCreate(s.ctx, input)
 	s.Error(err)
 }
 
 func (s *InputRepositorySuite) TestInputWrongApplication() {
-	input := Input{
+	input := model.Input{
 		EpochApplicationID: 999, // non-existent application
 		EpochIndex:         23,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.Create(s.ctx, input)
-	s.Error(err)
-}
-
-func (s *InputRepositorySuite) TestSafeInputWrongApplication() {
-	input := Input{
-		EpochApplicationID: 999, // non-existent application
-		EpochIndex:         23,
-		Index:              171,
-		BlockNumber:        0,
-		RawData:            []byte("test data"),
-		Status:             InputCompletionStatus_Accepted,
-	}
-
-	err := s.inputRepository.SafeCreate(s.ctx, input)
+	err := s.inputRepository.RawCreate(s.ctx, input)
 	s.Error(err)
 }
 
@@ -213,9 +172,9 @@ func (s *InputRepositorySuite) TestQueryInputWrongApplicationIndex() {
 }
 
 func (s *InputRepositorySuite) TestCountPreInputs() {
-	field := model.APP_ID
+	field := cModel.APP_ID
 	value := "1"
-	filter := []*model.ConvenienceFilter{
+	filter := []*cModel.ConvenienceFilter{
 		{
 			Field: &field,
 			Eq:    &value,
@@ -228,25 +187,25 @@ func (s *InputRepositorySuite) TestCountPreInputs() {
 
 func (s *InputRepositorySuite) TestCountInputs() {
 	// Insert test data
-	input1 := Input{
+	input1 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
-	input2 := Input{
+	input2 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
-		Status:             InputCompletionStatus_Rejected,
+		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.Create(s.ctx, input1)
+	err := s.inputRepository.RawCreate(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.Create(s.ctx, input2)
+	err = s.inputRepository.RawCreate(s.ctx, input2)
 	s.NoError(err)
 
 	// Test counting all inputs
@@ -255,10 +214,10 @@ func (s *InputRepositorySuite) TestCountInputs() {
 	s.Equal(uint64(103), count)
 
 	field := "Status"
-	value := InputCompletionStatus_Accepted.String()
+	value := model.InputCompletionStatus_Accepted.String()
 
 	// Test counting inputs with specific status
-	filter := []*model.ConvenienceFilter{
+	filter := []*cModel.ConvenienceFilter{
 		{
 			Field: &field,
 			Eq:    &value,
@@ -270,11 +229,11 @@ func (s *InputRepositorySuite) TestCountInputs() {
 }
 
 func (s *InputRepositorySuite) TestCountWrongStatusInputs() {
-	field := model.STATUS_PROPERTY
+	field := cModel.STATUS_PROPERTY
 	value := "CARTESI"
 
 	// Test counting inputs with non-existent status
-	filter := []*model.ConvenienceFilter{
+	filter := []*cModel.ConvenienceFilter{
 		{
 			Field: &field,
 			Eq:    &value,
@@ -285,11 +244,11 @@ func (s *InputRepositorySuite) TestCountWrongStatusInputs() {
 }
 
 func (s *InputRepositorySuite) TestCountWrongAppIdInputs() {
-	field := model.APP_ID
+	field := cModel.APP_ID
 	value := "999" // non-existent application
 
 	// Test counting inputs with non-existent status
-	filter := []*model.ConvenienceFilter{
+	filter := []*cModel.ConvenienceFilter{
 		{
 			Field: &field,
 			Eq:    &value,
@@ -301,11 +260,11 @@ func (s *InputRepositorySuite) TestCountWrongAppIdInputs() {
 }
 
 func (s *InputRepositorySuite) TestCountWrongFieldInputs() {
-	field := model.APP_CONTRACT
+	field := cModel.APP_CONTRACT
 	value := "0xdeadbeef" // non-existent application
 
 	// Test counting inputs with non-existent status
-	filter := []*model.ConvenienceFilter{
+	filter := []*cModel.ConvenienceFilter{
 		{
 			Field: &field,
 			Eq:    &value,
@@ -317,25 +276,25 @@ func (s *InputRepositorySuite) TestCountWrongFieldInputs() {
 
 func (s *InputRepositorySuite) TestFindAllInputsCount() {
 	// Insert test data
-	input1 := Input{
+	input1 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
-	input2 := Input{
+	input2 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
-		Status:             InputCompletionStatus_Rejected,
+		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.Create(s.ctx, input1)
+	err := s.inputRepository.RawCreate(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.Create(s.ctx, input2)
+	err = s.inputRepository.RawCreate(s.ctx, input2)
 	s.NoError(err)
 
 	// Test finding all inputs
@@ -346,31 +305,31 @@ func (s *InputRepositorySuite) TestFindAllInputsCount() {
 
 func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 	// Insert test data
-	input1 := Input{
+	input1 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
-	input2 := Input{
+	input2 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
-		Status:             InputCompletionStatus_Rejected,
+		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.Create(s.ctx, input1)
+	err := s.inputRepository.RawCreate(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.Create(s.ctx, input2)
+	err = s.inputRepository.RawCreate(s.ctx, input2)
 	s.NoError(err)
 
 	// Test finding inputs with a specific status
-	field := model.STATUS_PROPERTY
-	value := InputCompletionStatus_Rejected.String()
-	filter := []*model.ConvenienceFilter{
+	field := cModel.STATUS_PROPERTY
+	value := model.InputCompletionStatus_Rejected.String()
+	filter := []*cModel.ConvenienceFilter{
 		{
 			Field: &field,
 			Eq:    &value,
@@ -384,25 +343,25 @@ func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 
 func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	// Insert test data
-	input1 := Input{
+	input1 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
-		Status:             InputCompletionStatus_Accepted,
+		Status:             model.InputCompletionStatus_Accepted,
 	}
-	input2 := Input{
+	input2 := model.Input{
 		EpochApplicationID: 1,
 		EpochIndex:         23,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
-		Status:             InputCompletionStatus_Rejected,
+		Status:             model.InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.Create(s.ctx, input1)
+	err := s.inputRepository.RawCreate(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.Create(s.ctx, input2)
+	err = s.inputRepository.RawCreate(s.ctx, input2)
 	s.NoError(err)
 
 	// Test finding inputs with limit and offset
