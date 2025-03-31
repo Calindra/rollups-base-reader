@@ -1,4 +1,4 @@
-package inputrepository
+package repository
 
 import (
 	"context"
@@ -341,7 +341,7 @@ func (s *InputRepositorySuite) TestFindAllInputsCount() {
 	// Test finding all inputs
 	inputs, err := s.inputRepository.FindAll(s.ctx, nil, nil, nil, nil, nil)
 	s.NoError(err)
-	s.Len(inputs, 103)
+	s.Len(inputs.Rows, 103)
 }
 
 func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
@@ -376,10 +376,10 @@ func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 			Eq:    &value,
 		},
 	}
-	inputs, err := s.inputRepository.FindAll(s.ctx, filter, nil, nil, nil, nil)
+	inputs, err := s.inputRepository.FindAll(s.ctx, nil, nil, nil, nil, filter)
 	s.NoError(err)
-	s.Len(inputs, 1)
-	s.Equal(input2.Index, inputs[0].Index)
+	s.Len(inputs.Rows, 1)
+	s.Equal(input2.Index, inputs.Rows[0].Index)
 }
 
 func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
@@ -406,45 +406,11 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	s.NoError(err)
 
 	// Test finding inputs with limit and offset
-	limit := uint64(1)
-	offset := uint64(101)
-	inputs, err := s.inputRepository.FindAll(s.ctx, nil, &limit, &offset, nil, nil)
+	last := 2
+	inputs, err := s.inputRepository.FindAll(s.ctx, nil, &last, nil, nil, nil)
 	s.NoError(err)
-	s.Len(inputs, 1)
-	s.Equal(input1.Index, inputs[0].Index)
-}
-
-func (s *InputRepositorySuite) TestFindAllInputsOrderDirection() {
-	// Insert test data
-	input1 := Input{
-		EpochApplicationID: 1,
-		EpochIndex:         23,
-		Index:              171,
-		BlockNumber:        0,
-		RawData:            []byte("test data 1"),
-		Status:             InputCompletionStatus_Accepted,
-	}
-	input2 := Input{
-		EpochApplicationID: 1,
-		EpochIndex:         23,
-		Index:              172,
-		BlockNumber:        0,
-		RawData:            []byte("test data 2"),
-		Status:             InputCompletionStatus_Rejected,
-	}
-	err := s.inputRepository.Create(s.ctx, input1)
-	s.NoError(err)
-	err = s.inputRepository.Create(s.ctx, input2)
-	s.NoError(err)
-
-	// Test finding inputs with order by and direction
-	orderBy := "index"
-	orderDirection := "DESC"
-	inputs, err := s.inputRepository.FindAll(s.ctx, nil, nil, nil, &orderBy, &orderDirection)
-	s.NoError(err)
-	s.Len(inputs, 103)
-	s.Equal(input2.Index, inputs[0].Index)
-	s.Equal(input1.Index, inputs[1].Index)
+	s.Len(inputs.Rows, 2)
+	s.Equal(input1.Index, inputs.Rows[0].Index)
 }
 
 func TestInputRepositorySuite(t *testing.T) {

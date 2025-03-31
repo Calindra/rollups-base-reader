@@ -1,4 +1,4 @@
-package inputrepository
+package repository
 
 import (
 	"context"
@@ -8,7 +8,9 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/cartesi/rollups-graphql/pkg/commons"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
 	"github.com/jmoiron/sqlx"
 )
@@ -18,64 +20,16 @@ type staticstring string
 const txKey staticstring = "safeTxWriteInput"
 
 type InputRepository struct {
-	Db *sqlx.DB
+	Db              *sqlx.DB
+	AppRepository   *AppRepository
+	EpochRepository *EpochRepository
 }
 
 func NewInputRepository(db *sqlx.DB) *InputRepository {
-	return &InputRepository{db}
-}
+	appRepo := NewAppRepository(db)
+	epochRepo := NewEpochRepository(db)
 
-func (i *InputRepository) applicationExists(ctx context.Context, input Input, tx *sqlx.Tx) (bool, error) {
-	applicationId := input.EpochApplicationID
-
-	query := `SELECT EXISTS (
-		SELECT 1
-		FROM application
-		WHERE id = $1
-	)`
-	args := []any{applicationId}
-	var exists bool
-
-	// Create a prepared statement
-	stmt, err := tx.PreparexContext(ctx, query)
-	if err != nil {
-		return false, fmt.Errorf("error preparing application exists query: %w", err)
-	}
-	defer stmt.Close()
-
-	// Execute the query
-	err = stmt.GetContext(ctx, &exists, args...)
-	if err != nil {
-		return false, fmt.Errorf("error checking if application exists: %w", err)
-	}
-
-	return exists, nil
-}
-
-func (i *InputRepository) isEpochWithinBounds(ctx context.Context, input Input, tx *sqlx.Tx) (bool, error) {
-	epochIndex := input.EpochIndex
-	query := `SELECT EXISTS (
-		SELECT 1
-		FROM epoch
-		WHERE index >= $1 AND index <= (SELECT MAX(index) + 1 FROM epoch)
-	)`
-	args := []any{epochIndex}
-	var withinBounds bool
-
-	// Create a prepared statement
-	stmt, err := tx.PreparexContext(ctx, query)
-	if err != nil {
-		return false, fmt.Errorf("error preparing epoch bounds query: %w", err)
-	}
-	defer stmt.Close()
-
-	// Execute the query
-	err = stmt.GetContext(ctx, &withinBounds, args...)
-	if err != nil {
-		return false, fmt.Errorf("error checking if epoch is within bounds: %w", err)
-	}
-
-	return withinBounds, nil
+	return &InputRepository{db, appRepo, epochRepo}
 }
 
 func (i *InputRepository) SafeCreate(stdCtx context.Context, input Input) error {
@@ -86,14 +40,14 @@ func (i *InputRepository) SafeCreate(stdCtx context.Context, input Input) error 
 	defer tx.Rollback()
 	ctx := context.WithValue(stdCtx, txKey, tx)
 
-	exists, err := i.applicationExists(ctx, input, tx)
+	exists, err := i.AppRepository.Exists(ctx, input.EpochApplicationID, tx)
 	if err != nil {
 		return fmt.Errorf("error checking if application exists: %w", err)
 	}
 	if !exists {
 		return fmt.Errorf("application with id %d does not exist", input.EpochApplicationID)
 	}
-	withinBounds, err := i.isEpochWithinBounds(ctx, input, tx)
+	withinBounds, err := i.EpochRepository.isWithinBounds(ctx, input, tx)
 	if err != nil {
 		return fmt.Errorf("error checking if epoch is within bounds: %w", err)
 	}
@@ -199,6 +153,18 @@ func (i *InputRepository) Count(
 	return count, nil
 }
 
+func (i *InputRepository) AdvanceInputToInput(advanceInput cModel.AdvanceInput) Input {
+	panic("not implemented")
+	// return Input{
+	// 	EpochApplicationID: advanceInput.AppContract.Hex(),
+	// 	EpochIndex:         advanceInput.Index,
+	// 	Index:              advanceInput.Index,
+	// 	BlockNumber:        advanceInput.BlockNumber,
+	// 	RawData:            advanceInput.Payload,
+	// 	Status:             advanceInput.Status,
+	// }
+}
+
 func (i *InputRepository) Create(ctx context.Context, input Input) error {
 	var (
 		err error
@@ -281,12 +247,17 @@ func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, i
 
 func (i *InputRepository) FindAll(
 	ctx context.Context,
+	first *int,
+	last *int,
+	after *string,
+	before *string,
 	filter []*model.ConvenienceFilter,
-	limit *uint64,
-	offset *uint64,
-	orderBy *string,
-	orderDirection *string,
-) ([]Input, error) {
+) (*commons.PageResult[Input], error) {
+	total, err := i.Count(ctx, filter)
+	if err != nil {
+		slog.Error("database error", "err", err)
+		return nil, err
+	}
 	query := `SELECT
 		epoch_application_id,
 		epoch_index,
@@ -297,29 +268,23 @@ func (i *InputRepository) FindAll(
 		created_at,
 		updated_at
 	FROM input `
-	where, args, count, err := transformToInputQuery(filter)
+	where, args, argsCount, err := transformToInputQuery(filter)
 	if err != nil {
 		return nil, fmt.Errorf("error transforming filter to query: %w", err)
 	}
 	query += where
 
-	if orderBy != nil && orderDirection != nil {
-		query += fmt.Sprintf(" ORDER BY %s %s", *orderBy, *orderDirection)
+	offset, limit, err := commons.ComputePage(first, last, after, before, int(total))
+	if err != nil {
+		return nil, err
 	}
+	query += fmt.Sprintf(`LIMIT $%d `, argsCount)
+	args = append(args, limit)
+	argsCount += 1
+	query += fmt.Sprintf(`OFFSET $%d `, argsCount)
+	args = append(args, offset)
 
-	if limit != nil {
-		query += fmt.Sprintf(" LIMIT $%d", count)
-		args = append(args, *limit)
-		count++
-	}
-
-	if offset != nil {
-		query += fmt.Sprintf(" OFFSET $%d", count)
-		args = append(args, *offset)
-	}
-
-	slog.Debug("FindAll Query", "query", query, "args", args)
-
+	slog.Debug("Query", "query", query, "args", args, "total", total)
 	stmt, err := i.Db.PreparexContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing find all query: %w", err)
@@ -332,5 +297,11 @@ func (i *InputRepository) FindAll(
 		return nil, fmt.Errorf("error executing find all query: %w", err)
 	}
 
-	return inputs, nil
+	pageResult := &commons.PageResult[Input]{
+		Rows:   inputs,
+		Total:  total,
+		Offset: uint64(offset),
+	}
+
+	return pageResult, nil
 }
