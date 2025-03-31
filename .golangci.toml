@@ -15,5 +15,7 @@ settings.errcheck.exclude-functions = [
     "(*os.File).Close",
     "(*compress/gzip.Reader).Close",
     "(*database/sql.DB).Close",
+    "(*database/sql.Stmt).Close",
+    "(*database/sql.Tx).Rollback",
     "(*github.com/calindra/rollups-base-reader/pkg/contracts.InputBoxInputAddedIterator).Close"
 ]
