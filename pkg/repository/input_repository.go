@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"strings"
 
+	util "github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
@@ -13,21 +14,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type staticstring string
-
-const txKey staticstring = "safeTxWriteInput"
-
 type InputRepository struct {
 	Db              *sqlx.DB
-	AppRepository   *AppRepository
-	EpochRepository *EpochRepository
 }
 
 func NewInputRepository(db *sqlx.DB) *InputRepository {
-	appRepo := NewAppRepository(db)
-	epochRepo := NewEpochRepository(db)
-
-	return &InputRepository{db, appRepo, epochRepo}
+	return &InputRepository{db}
 }
 
 func transformToInputQuery(
@@ -114,11 +106,6 @@ func (i *InputRepository) Count(
 }
 
 func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
-	var (
-		err error
-		tx  *sqlx.Tx
-	)
-
 	query := `INSERT INTO input (
 		epoch_application_id,
 		epoch_index,
@@ -130,13 +117,9 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status}
 
 	// Check if the transaction is already started
-	tx, ok := ctx.Value(txKey).(*sqlx.Tx)
-	if !ok {
-		// Start a transaction
-		tx, err = i.Db.BeginTxx(ctx, nil)
-		if err != nil {
-			return fmt.Errorf("error starting transaction: %w", err)
-		}
+	tx, err := util.NewTx(ctx, i.Db)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
 	}
 	// Rollback the transaction if there is an error
 	defer tx.Rollback()
@@ -162,7 +145,7 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 	return nil
 }
 
-func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, index uint64) (*model.Input, error) {
+func (i *InputRepository) FindOne(ctx context.Context, applicationId int64, index uint64) (*model.Input, error) {
 	query := `SELECT
 		epoch_application_id,
 		epoch_index,

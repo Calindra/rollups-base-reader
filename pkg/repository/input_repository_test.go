@@ -114,7 +114,7 @@ func (s *InputRepositorySuite) TestInputRepository() {
 	err := s.inputRepository.Create(s.ctx, input)
 	s.NoError(err)
 
-	inputDb, err := s.inputRepository.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
+	inputDb, err := s.inputRepository.FindOne(s.ctx, input.EpochApplicationID, input.Index)
 	s.NoError(err)
 	s.Equal(input.EpochApplicationID, inputDb.EpochApplicationID)
 }
@@ -166,7 +166,7 @@ func (s *InputRepositorySuite) TestQueryInputWrongApplicationIndex() {
 		applicationId int64  = 999 // non-existent application
 		index         uint64 = 171 // non-existent index
 	)
-	_, err := s.inputRepository.QueryInput(s.ctx, applicationId, index)
+	_, err := s.inputRepository.FindOne(s.ctx, applicationId, index)
 	s.Error(err)
 	s.ErrorIs(err, sql.ErrNoRows)
 }
