@@ -66,15 +66,15 @@ type AnvilConfig struct {
 func RunCommandOnce(stdCtx context.Context, cmd *exec.Cmd) ([]byte, error) {
 	err := cmd.Start()
 	if err != nil {
-		return nil, fmt.Errorf("Don't start the command: %w", err)
+		return nil, fmt.Errorf("don't start the command: %w", err)
 	}
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Don't get the output: %w", err)
+		return nil, fmt.Errorf("don't get the output: %w", err)
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return nil, fmt.Errorf("Don't wait the command: %w", err)
+		return nil, fmt.Errorf("don't wait the command: %w", err)
 	}
 	return output, nil
 }
@@ -214,7 +214,7 @@ func (a *AnvilRelease) ExtractAsset(archive []byte, filename string, destDir str
 // DownloadAsset implements HandleRelease.
 func (a *AnvilRelease) DownloadAsset(ctx context.Context, release *ReleaseAsset) (string, error) {
 	root := filepath.Join(os.TempDir(), release.Tag)
-	var perm os.FileMode = 0755 | os.ModeDir
+	perm := 0755 | os.ModeDir
 	err := os.MkdirAll(root, perm)
 	if err != nil {
 		return "", fmt.Errorf("anvil: failed to create temp dir %s", err.Error())
