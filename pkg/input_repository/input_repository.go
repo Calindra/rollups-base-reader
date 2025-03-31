@@ -269,8 +269,68 @@ func (i *InputRepository) QueryInput(ctx context.Context, applicationId int64, i
 	}
 	defer stmt.Close()
 
-	input := Input{}
-	err = stmt.GetContext(ctx, &input, args...)
+	input := &Input{}
+	err = stmt.GetContext(ctx, input, args...)
 
-	return &input, err
+	if err != nil {
+		return nil, err
+	}
+
+	return input, nil
+}
+
+func (i *InputRepository) FindAll(
+	ctx context.Context,
+	filter []*model.ConvenienceFilter,
+	limit *uint64,
+	offset *uint64,
+	orderBy *string,
+	orderDirection *string,
+) ([]Input, error) {
+	query := `SELECT
+		epoch_application_id,
+		epoch_index,
+		index,
+		block_number,
+		raw_data,
+		status,
+		created_at,
+		updated_at
+	FROM input `
+	where, args, count, err := transformToInputQuery(filter)
+	if err != nil {
+		return nil, fmt.Errorf("error transforming filter to query: %w", err)
+	}
+	query += where
+
+	if orderBy != nil && orderDirection != nil {
+		query += fmt.Sprintf(" ORDER BY %s %s", *orderBy, *orderDirection)
+	}
+
+	if limit != nil {
+		query += fmt.Sprintf(" LIMIT $%d", count)
+		args = append(args, *limit)
+		count++
+	}
+
+	if offset != nil {
+		query += fmt.Sprintf(" OFFSET $%d", count)
+		args = append(args, *offset)
+	}
+
+	slog.Debug("FindAll Query", "query", query, "args", args)
+
+	stmt, err := i.Db.PreparexContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing find all query: %w", err)
+	}
+	defer stmt.Close()
+
+	var inputs []Input
+	err = stmt.SelectContext(ctx, &inputs, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error executing find all query: %w", err)
+	}
+
+	return inputs, nil
 }

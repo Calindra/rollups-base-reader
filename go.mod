@@ -11,6 +11,7 @@ require (
 	github.com/ethereum/go-ethereum v1.15.5
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/lib/pq v1.10.9
 	github.com/lmittmann/tint v1.0.3
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.35.0

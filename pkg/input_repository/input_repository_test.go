@@ -14,6 +14,7 @@ import (
 	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -312,6 +313,138 @@ func (s *InputRepositorySuite) TestCountWrongFieldInputs() {
 	}
 	_, err := s.inputRepository.Count(s.ctx, filter)
 	s.Error(err)
+}
+
+func (s *InputRepositorySuite) TestFindAllInputsCount() {
+	// Insert test data
+	input1 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data 1"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+	input2 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              172,
+		BlockNumber:        0,
+		RawData:            []byte("test data 2"),
+		Status:             InputCompletionStatus_Rejected,
+	}
+	err := s.inputRepository.Create(s.ctx, input1)
+	s.NoError(err)
+	err = s.inputRepository.Create(s.ctx, input2)
+	s.NoError(err)
+
+	// Test finding all inputs
+	inputs, err := s.inputRepository.FindAll(s.ctx, nil, nil, nil, nil, nil)
+	s.NoError(err)
+	s.Len(inputs, 103)
+}
+
+func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
+	// Insert test data
+	input1 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data 1"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+	input2 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              172,
+		BlockNumber:        0,
+		RawData:            []byte("test data 2"),
+		Status:             InputCompletionStatus_Rejected,
+	}
+	err := s.inputRepository.Create(s.ctx, input1)
+	s.NoError(err)
+	err = s.inputRepository.Create(s.ctx, input2)
+	s.NoError(err)
+
+	// Test finding inputs with a specific status
+	field := model.STATUS_PROPERTY
+	value := InputCompletionStatus_Rejected.String()
+	filter := []*model.ConvenienceFilter{
+		{
+			Field: &field,
+			Eq:    &value,
+		},
+	}
+	inputs, err := s.inputRepository.FindAll(s.ctx, filter, nil, nil, nil, nil)
+	s.NoError(err)
+	s.Len(inputs, 1)
+	s.Equal(input2.Index, inputs[0].Index)
+}
+
+func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
+	// Insert test data
+	input1 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data 1"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+	input2 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              172,
+		BlockNumber:        0,
+		RawData:            []byte("test data 2"),
+		Status:             InputCompletionStatus_Rejected,
+	}
+	err := s.inputRepository.Create(s.ctx, input1)
+	s.NoError(err)
+	err = s.inputRepository.Create(s.ctx, input2)
+	s.NoError(err)
+
+	// Test finding inputs with limit and offset
+	limit := uint64(1)
+	offset := uint64(101)
+	inputs, err := s.inputRepository.FindAll(s.ctx, nil, &limit, &offset, nil, nil)
+	s.NoError(err)
+	s.Len(inputs, 1)
+	s.Equal(input1.Index, inputs[0].Index)
+}
+
+func (s *InputRepositorySuite) TestFindAllInputsOrderDirection() {
+	// Insert test data
+	input1 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data 1"),
+		Status:             InputCompletionStatus_Accepted,
+	}
+	input2 := Input{
+		EpochApplicationID: 1,
+		EpochIndex:         23,
+		Index:              172,
+		BlockNumber:        0,
+		RawData:            []byte("test data 2"),
+		Status:             InputCompletionStatus_Rejected,
+	}
+	err := s.inputRepository.Create(s.ctx, input1)
+	s.NoError(err)
+	err = s.inputRepository.Create(s.ctx, input2)
+	s.NoError(err)
+
+	// Test finding inputs with order by and direction
+	orderBy := "index"
+	orderDirection := "DESC"
+	inputs, err := s.inputRepository.FindAll(s.ctx, nil, nil, nil, &orderBy, &orderDirection)
+	s.NoError(err)
+	s.Len(inputs, 103)
+	s.Equal(input2.Index, inputs[0].Index)
+	s.Equal(input1.Index, inputs[1].Index)
 }
 
 func TestInputRepositorySuite(t *testing.T) {
