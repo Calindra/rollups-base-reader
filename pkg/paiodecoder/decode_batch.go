@@ -119,7 +119,7 @@ func NewPaioReleaseHandler() commons.HandleRelease {
 func (d PaioReleaseHandler) DownloadAsset(ctx context.Context, release *commons.ReleaseAsset) (string, error) {
 	folder := d.Repository + "-" + release.Tag
 	root := filepath.Join(os.TempDir(), folder)
-	var perm os.FileMode = 0755 | os.ModeDir
+	perm := 0755 | os.ModeDir
 	err := os.MkdirAll(root, perm)
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp dir %s", err.Error())
