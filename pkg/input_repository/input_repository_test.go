@@ -30,7 +30,7 @@ type InputRepositorySuite struct {
 }
 
 const timeout time.Duration = 5 * time.Minute
-const dbImage = "postgres:16-alpine"
+const dbImage = "postgres:17.4-alpine"
 const dbName = "rollups"
 const dbUser = "postgres"
 const dbPassword = "password"
