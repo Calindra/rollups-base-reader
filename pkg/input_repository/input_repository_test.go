@@ -109,7 +109,7 @@ func (s *InputRepositorySuite) TestInputRepository() {
 		RawData:            []byte("test data"),
 		Status:             InputCompletionStatus_Accepted,
 	}
-	err := s.inputRepository.WriteInput(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.NoError(err)
 
 	inputDb, err := s.inputRepository.QueryInput(s.ctx, input.EpochApplicationID, input.Index)
@@ -127,7 +127,7 @@ func (s *InputRepositorySuite) TestInputWrongIndex() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.WriteInput(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.Error(err)
 }
 
@@ -141,7 +141,7 @@ func (s *InputRepositorySuite) TestSafeInputWrongIndex() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.SafeWriteInput(s.ctx, input)
+	err := s.inputRepository.SafeCreate(s.ctx, input)
 	s.Error(err)
 }
 
@@ -155,7 +155,7 @@ func (s *InputRepositorySuite) TestInputWrongEpoch() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.WriteInput(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.Error(err)
 }
 
@@ -169,7 +169,7 @@ func (s *InputRepositorySuite) TestSafeInputWrongEpoch() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.SafeWriteInput(s.ctx, input)
+	err := s.inputRepository.SafeCreate(s.ctx, input)
 	s.Error(err)
 }
 
@@ -183,7 +183,7 @@ func (s *InputRepositorySuite) TestInputWrongApplication() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.WriteInput(s.ctx, input)
+	err := s.inputRepository.Create(s.ctx, input)
 	s.Error(err)
 }
 
@@ -197,7 +197,7 @@ func (s *InputRepositorySuite) TestSafeInputWrongApplication() {
 		Status:             InputCompletionStatus_Accepted,
 	}
 
-	err := s.inputRepository.SafeWriteInput(s.ctx, input)
+	err := s.inputRepository.SafeCreate(s.ctx, input)
 	s.Error(err)
 }
 
@@ -243,9 +243,9 @@ func (s *InputRepositorySuite) TestCountInputs() {
 		RawData:            []byte("test data 2"),
 		Status:             InputCompletionStatus_Rejected,
 	}
-	err := s.inputRepository.WriteInput(s.ctx, input1)
+	err := s.inputRepository.Create(s.ctx, input1)
 	s.NoError(err)
-	err = s.inputRepository.WriteInput(s.ctx, input2)
+	err = s.inputRepository.Create(s.ctx, input2)
 	s.NoError(err)
 
 	// Test counting all inputs

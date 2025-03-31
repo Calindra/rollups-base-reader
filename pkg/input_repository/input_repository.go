@@ -82,7 +82,7 @@ func (i *InputRepository) isEpochWithinBounds(ctx context.Context, input Input, 
 	return withinBounds, nil
 }
 
-func (i *InputRepository) SafeWriteInput(stdCtx context.Context, input Input) error {
+func (i *InputRepository) SafeCreate(stdCtx context.Context, input Input) error {
 	tx, err := i.Db.BeginTxx(stdCtx, nil)
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
@@ -109,7 +109,7 @@ func (i *InputRepository) SafeWriteInput(stdCtx context.Context, input Input) er
 	inputDB, err := i.QueryInput(ctx, input.EpochApplicationID, input.Index)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return i.WriteInput(ctx, input)
+			return i.Create(ctx, input)
 		}
 		return err
 	}
@@ -203,7 +203,7 @@ func (i *InputRepository) Count(
 	return count, nil
 }
 
-func (i *InputRepository) WriteInput(ctx context.Context, input Input) error {
+func (i *InputRepository) Create(ctx context.Context, input Input) error {
 	var (
 		err error
 		tx  *sqlx.Tx
