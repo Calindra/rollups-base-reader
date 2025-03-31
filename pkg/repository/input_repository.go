@@ -10,7 +10,6 @@ import (
 
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/model"
-	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
 	"github.com/jmoiron/sqlx"
 )
@@ -153,7 +152,7 @@ func (i *InputRepository) Count(
 	return count, nil
 }
 
-func (i *InputRepository) AdvanceInputToInput(advanceInput cModel.AdvanceInput) Input {
+func (i *InputRepository) AdvanceInputToInput(advanceInput model.AdvanceInput) Input {
 	panic("not implemented")
 	// return Input{
 	// 	EpochApplicationID: advanceInput.AppContract.Hex(),
