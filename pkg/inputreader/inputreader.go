@@ -183,7 +183,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	inputBox *contracts.InputBox,
 	startBlockNumber uint64,
 	endTimestamp uint64,
-) ([]model.Input, error) {
+) ([]model.InputExtra, error) {
 	slog.Debug("ReadInputsByBlockAndTimestamp",
 		"startBlockNumber", startBlockNumber,
 		"dappAddress", w.ApplicationAddress,
@@ -196,7 +196,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	}
 	filter := []common.Address{w.ApplicationAddress}
 	it, err := inputBox.FilterInputAdded(&opts, filter, nil)
-	result := []model.Input{}
+	result := []model.InputExtra{}
 	if err != nil {
 		return result, fmt.Errorf("inputreader: filter input added: %v", err)
 	}
@@ -209,7 +209,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 			return result, fmt.Errorf("inputreader: failed to get tx header: %w", err)
 		}
 		timestamp := uint64(header.Time)
-		// unixTimestamp := time.Unix(int64(header.Time), 0)
+		unixTimestamp := time.Unix(int64(header.Time), 0)
 		if timestamp < endTimestamp {
 			eventInput := it.Event.Input[4:]
 			abi, err := contracts.InputsMetaData.GetAbi()
@@ -224,22 +224,28 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				return result, err
 			}
 
+			chainId := values[0].(*big.Int).Uint64()
 			appContract := values[1].(common.Address)
+			msgSender := values[2].(common.Address)
+			prevRandao := common.BytesToHash(values[5].(*big.Int).Bytes())
 			payload := values[7].([]uint8)
 			inputIndex := it.Event.Index.Uint64()
 
-			appStr := appContract.String()
-
-			input := model.Input{
-				Index:                inputIndex,
-				BlockNumber:          header.Number.Uint64(),
-				RawData:              payload,
-				TransactionReference: it.Event.Raw.TxHash,
-				Status:               model.InputCompletionStatus_None,
-				EpochApplicationID:   -1,
-				EpochIndex:           0,
-				// a bit trick
-				SnapshotURI: &appStr,
+			input := model.InputExtra{
+				Input: model.Input{
+					Index:                inputIndex,
+					BlockNumber:          header.Number.Uint64(),
+					RawData:              payload,
+					TransactionReference: it.Event.Raw.TxHash,
+					Status:               model.InputCompletionStatus_None,
+					EpochApplicationID:   -1,
+					EpochIndex:           0,
+				},
+				BlockTimestamp: unixTimestamp,
+				AppContract:    appContract,
+				MsgSender: 	msgSender,
+				ChainId: 	chainId,
+				PrevRandao: prevRandao,
 			}
 			slog.Debug("append InputAdded", "timestamp", timestamp, "endTimestamp", endTimestamp)
 			result = append(result, input)

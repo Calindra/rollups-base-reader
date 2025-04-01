@@ -126,14 +126,12 @@ func (s *InputReaderTestSuite) TestFindAllInputsByBlockAndTimestampLT() {
 	s.NoError(err)
 	l1FinalizedPrevHeight := uint64(1)
 	timestamp := uint64(time.Now().UnixMilli())
-	appID := int64(1)
 	w := InputReaderWorker{
 		Model:              nil,
 		Provider:           "",
 		InputBoxAddress:    inputBoxAddress,
 		InputBoxBlock:      1,
 		ApplicationAddress: appAddress,
-		ApplicationId:      &appID,
 	}
 
 	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, timestamp)
@@ -155,14 +153,12 @@ func (s *InputReaderTestSuite) TestZeroResultsFindAllInputsByBlockAndTimestampLT
 	s.NoError(err)
 	l1FinalizedPrevHeight := uint64(1)
 	timestamp := uint64(time.Now().UnixMilli())
-	appID := int64(1)
 	w := InputReaderWorker{
 		Model:              nil,
 		Provider:           "",
 		InputBoxAddress:    inputBoxAddress,
 		InputBoxBlock:      1,
 		ApplicationAddress: appAddress,
-		ApplicationId:      &appID,
 	}
 	// block, err := client.BlockByNumber(ctx, nil)
 	// s.NoError(err)

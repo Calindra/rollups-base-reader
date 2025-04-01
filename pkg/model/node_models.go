@@ -532,3 +532,13 @@ func (e MonitoredEvent) String() string {
 func Pointer[T any](v T) *T {
 	return &v
 }
+
+// Extra
+type InputExtra struct {
+	Input
+	BlockTimestamp time.Time
+	AppContract   common.Address
+	MsgSender      common.Address
+	ChainId        uint64
+	PrevRandao      common.Hash
+}
