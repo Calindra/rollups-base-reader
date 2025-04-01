@@ -12,6 +12,7 @@ import (
 	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -35,7 +36,7 @@ func (s *AppRepositorySuite) SetupSuite() {
 	s.NoError(err)
 	defer schemaFile.Close()
 
-	resp, err := http.Get(schema)
+	resp, err := http.Get(commons.Schema)
 	s.NoError(err)
 	defer resp.Body.Close()
 
@@ -45,16 +46,16 @@ func (s *AppRepositorySuite) SetupSuite() {
 
 func (s *AppRepositorySuite) SetupTest() {
 	commons.ConfigureLog(slog.LevelDebug)
-	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
+	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), commons.DefaultTimeout)
 
 	// Database
-	container, err := postgres.Run(s.ctx, dbImage,
+	container, err := postgres.Run(s.ctx, commons.DbImage,
 		postgres.BasicWaitStrategies(),
 		postgres.WithInitScripts(s.schemaDir),
-		postgres.WithDatabase(dbName),
-		postgres.WithUsername(dbUser),
-		postgres.WithPassword(dbPassword),
-		testcontainers.WithLogConsumers(&StdoutLogConsumer{}),
+		postgres.WithDatabase(commons.DbName),
+		postgres.WithUsername(commons.DbUser),
+		postgres.WithPassword(commons.DbPassword),
+		testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}),
 	)
 	s.NoError(err)
 	extraArg := "sslmode=disable"

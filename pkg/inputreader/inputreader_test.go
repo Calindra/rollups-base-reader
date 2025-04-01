@@ -6,27 +6,57 @@ package inputreader
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	util "github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/contracts"
 	"github.com/calindra/rollups-base-reader/pkg/devnet"
+	"github.com/calindra/rollups-base-reader/pkg/repository"
 	"github.com/calindra/rollups-base-reader/pkg/supervisor"
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
 type InputReaderTestSuite struct {
 	suite.Suite
+	appRepository *repository.AppRepository
 	ctx           context.Context
 	workerCtx     context.Context
 	timeoutCancel context.CancelFunc
 	workerCancel  context.CancelFunc
 	workerResult  chan error
 	rpcUrl        string
+	schemaDir     string
+	image         *postgres.PostgresContainer
+}
+
+func (s *InputReaderTestSuite) SetupSuite() {
+	// Fetch schema
+	tmpDir, err := os.MkdirTemp("", "schema")
+	s.NoError(err)
+	s.schemaDir = filepath.Join(tmpDir, "schema.sql")
+	schemaFile, err := os.Create(s.schemaDir)
+	s.NoError(err)
+	defer schemaFile.Close()
+
+	resp, err := http.Get(util.Schema)
+	s.NoError(err)
+	defer resp.Body.Close()
+
+	_, err = io.Copy(schemaFile, resp.Body)
+	s.NoError(err)
 }
 
 func (s *InputReaderTestSuite) SetupTest() {
@@ -34,8 +64,7 @@ func (s *InputReaderTestSuite) SetupTest() {
 	slog.Debug("Setup!!!")
 	var w supervisor.SupervisorWorker
 	w.Name = "TesteInputter"
-	const testTimeout = 5 * time.Second
-	s.ctx, s.timeoutCancel = context.WithTimeout(context.Background(), testTimeout)
+	s.ctx, s.timeoutCancel = context.WithTimeout(context.Background(), util.DefaultTimeout)
 	s.workerResult = make(chan error)
 
 	s.workerCtx, s.workerCancel = context.WithCancel(s.ctx)
@@ -47,6 +76,28 @@ func (s *InputReaderTestSuite) SetupTest() {
 		Verbose:  true,
 		AnvilCmd: "anvil",
 	})
+
+	// Database
+	container, err := postgres.Run(s.ctx, util.DbImage,
+		postgres.BasicWaitStrategies(),
+		postgres.WithInitScripts(s.schemaDir),
+		postgres.WithDatabase(util.DbName),
+		postgres.WithUsername(util.DbUser),
+		postgres.WithPassword(util.DbPassword),
+		testcontainers.WithLogConsumers(&util.StdoutLogConsumer{}),
+	)
+	s.NoError(err)
+	extraArg := "sslmode=disable"
+	connectionStr, err := container.ConnectionString(s.ctx, extraArg)
+	s.NoError(err)
+	s.image = container
+	err = container.Start(s.ctx)
+	s.NoError(err)
+
+	db, err := sqlx.ConnectContext(s.ctx, "postgres", connectionStr)
+	s.NoError(err)
+
+	s.appRepository = repository.NewAppRepository(db)
 
 	s.rpcUrl = fmt.Sprintf("ws://%s:%v", devnet.AnvilDefaultAddress, devnet.AnvilDefaultPort)
 	ready := make(chan struct{})
@@ -75,38 +126,43 @@ func (s *InputReaderTestSuite) TestFindAllInputsByBlockAndTimestampLT() {
 	s.NoError(err)
 	l1FinalizedPrevHeight := uint64(1)
 	timestamp := uint64(time.Now().UnixMilli())
+	appID := int64(1)
 	w := InputReaderWorker{
 		Model:              nil,
 		Provider:           "",
 		InputBoxAddress:    inputBoxAddress,
 		InputBoxBlock:      1,
 		ApplicationAddress: appAddress,
+		ApplicationId:      &appID,
 	}
 
 	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, timestamp)
 	s.NoError(err)
 	s.NotNil(inputs)
-	s.Equal(1, len(inputs))
+	s.Len(inputs, 1)
 }
 
 func (s *InputReaderTestSuite) TestZeroResultsFindAllInputsByBlockAndTimestampLT() {
+	ctx, ctxCancel := context.WithCancel(s.ctx)
+	defer ctxCancel()
 	client, err := ethclient.DialContext(s.ctx, "http://127.0.0.1:8545")
 	s.NoError(err)
 	appAddress := common.HexToAddress(devnet.ApplicationAddress)
 	inputBoxAddress := common.HexToAddress(devnet.InputBoxAddress)
 	inputBox, err := contracts.NewInputBox(inputBoxAddress, client)
 	s.NoError(err)
-	ctx := context.Background()
 	err = devnet.AddInput(ctx, s.rpcUrl, common.Hex2Bytes("deadbeef"))
 	s.NoError(err)
 	l1FinalizedPrevHeight := uint64(1)
 	timestamp := uint64(time.Now().UnixMilli())
+	appID := int64(1)
 	w := InputReaderWorker{
 		Model:              nil,
 		Provider:           "",
 		InputBoxAddress:    inputBoxAddress,
 		InputBoxBlock:      1,
 		ApplicationAddress: appAddress,
+		ApplicationId:      &appID,
 	}
 	// block, err := client.BlockByNumber(ctx, nil)
 	// s.NoError(err)

@@ -12,7 +12,6 @@ import (
 
 	"github.com/calindra/rollups-base-reader/pkg/contracts"
 	"github.com/calindra/rollups-base-reader/pkg/model"
-	cRepos "github.com/cartesi/rollups-graphql/pkg/convenience/repository"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -39,7 +38,6 @@ type InputReaderWorker struct {
 	InputBoxBlock      uint64
 	ApplicationAddress common.Address
 	ApplicationId      *int64
-	Repository         cRepos.InputRepository
 	EthClient          *ethclient.Client
 }
 
