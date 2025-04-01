@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
@@ -76,7 +77,7 @@ func (s *AppRepositorySuite) TearDownTest() {
 	s.ctxCancel()
 }
 
-func (s *AppRepositorySuite) TestFindAll() {
+func (s *AppRepositorySuite) TestList() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()
 
@@ -90,6 +91,22 @@ func (s *AppRepositorySuite) TestFindAll() {
 	s.Equal(int64(1), firstApp.ID)
 	s.Equal("echo-dapp", firstApp.Name)
 	s.Equal("0x8e3c7bF65833ccb1755dAB530Ef0405644FE6ae3", firstApp.IApplicationAddress.String())
+}
+
+func (s *AppRepositorySuite) TestFindOneByContract() {
+	ctx, cancel := context.WithCancel(s.ctx)
+	defer cancel()
+
+	contractAddress := common.HexToAddress("0x8e3c7bF65833ccb1755dAB530Ef0405644FE6ae3")
+
+	// Call FindOne with application ID 1 (which is pre-populated in the test DB)
+	app, err := s.appRepository.FindOneByContract(ctx, contractAddress)
+	s.NoError(err)
+
+	// Validate the application fields
+	s.Equal(1, int(app.ID))
+	s.Equal("echo-dapp", app.Name)
+	s.Equal(contractAddress.Hex(), app.IApplicationAddress.String())
 }
 
 func TestAppRepository(t *testing.T) {

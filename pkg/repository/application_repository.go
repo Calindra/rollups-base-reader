@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,33 +17,31 @@ func NewAppRepository(db *sqlx.DB) *AppRepository {
 	return &AppRepository{db}
 }
 
-func (a *AppRepository) FindAll(
+// FindOneByContract returns a single application by ID
+func (a *AppRepository) FindOneByContract(
 	ctx context.Context,
-	limit int,
-	offset int,
-	tx *sqlx.Tx,
-) ([]model.Application, error) {
-	query := `SELECT id, name, app_contract
+	address common.Address,
+) (*model.Application, error) {
+	query := `SELECT id, name, iapplication_address
 	FROM application
-	ORDER BY id
-	LIMIT $1 OFFSET $2`
-	args := []any{limit, offset}
-	apps := []model.Application{}
+	WHERE iapplication_address = $1`
+	args := []any{address}
+	app := model.Application{}
 
 	// Create a prepared statement
-	stmt, err := tx.PreparexContext(ctx, query)
+	stmt, err := a.Db.PreparexContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing application query: %w", err)
 	}
 	defer stmt.Close()
 
 	// Execute the query
-	err = stmt.SelectContext(ctx, &apps, args...)
+	err = stmt.GetContext(ctx, &app, args...)
 	if err != nil {
-		return nil, fmt.Errorf("error querying applications: %w", err)
+		return nil, fmt.Errorf("error querying application with address %s: %w", address.Hex(), err)
 	}
 
-	return apps, nil
+	return &app, nil
 }
 
 func (a *AppRepository) List(
