@@ -37,7 +37,6 @@ type InputReaderWorker struct {
 	InputBoxAddress    common.Address
 	InputBoxBlock      uint64
 	ApplicationAddress common.Address
-	ApplicationId      *int64
 	EthClient          *ethclient.Client
 }
 
@@ -185,14 +184,6 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	startBlockNumber uint64,
 	endTimestamp uint64,
 ) ([]model.Input, error) {
-	// Check if the application ID is set
-	var appID int64
-	if w.ApplicationId != nil {
-		appID = *w.ApplicationId
-	} else {
-		return nil, fmt.Errorf("inputreader: application id is not set")
-	}
-
 	slog.Debug("ReadInputsByBlockAndTimestamp",
 		"startBlockNumber", startBlockNumber,
 		"dappAddress", w.ApplicationAddress,
@@ -233,8 +224,11 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				return result, err
 			}
 
+			appContract := values[1].(common.Address)
 			payload := values[7].([]uint8)
 			inputIndex := it.Event.Index.Uint64()
+
+			appStr := appContract.String()
 
 			input := model.Input{
 				Index:                inputIndex,
@@ -242,7 +236,10 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				RawData:              payload,
 				TransactionReference: it.Event.Raw.TxHash,
 				Status:               model.InputCompletionStatus_None,
-				EpochApplicationID:   appID,
+				EpochApplicationID:   -1,
+				EpochIndex:           0,
+				// a bit trick
+				SnapshotURI: &appStr,
 			}
 			slog.Debug("append InputAdded", "timestamp", timestamp, "endTimestamp", endTimestamp)
 			result = append(result, input)
