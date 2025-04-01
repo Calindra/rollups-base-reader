@@ -1,4 +1,3 @@
-// Code generated from GitHub. DO NOT EDIT.
 // Source: https://raw.githubusercontent.com/cartesi/rollups-node/d8063929ef309df6925ff45883cce482ec3d9e18/internal/model/models.go
 
 // (c) Cartesi and individual authors (see AUTHORS)
@@ -17,24 +16,24 @@ import (
 )
 
 type Application struct {
-	ID                   int64                    `sql:"primary_key" json:"-"`
-	Name                 string                   `json:"name"`
-	IApplicationAddress  common.Address           `json:"iapplication_address"`
-	IConsensusAddress    common.Address           `json:"iconsensus_address"`
-	IInputBoxAddress     common.Address           `json:"iinputbox_address"`
-	TemplateHash         common.Hash              `json:"template_hash"`
-	TemplateURI          string                   `json:"-"`
-	EpochLength          uint64                   `json:"epoch_length"`
-	DataAvailability     DataAvailabilitySelector `json:"data_availability"`
-	State                ApplicationState         `json:"state"`
-	Reason               *string                  `json:"reason"`
-	IInputBoxBlock       uint64                   `json:"iinputbox_block"`
-	LastInputCheckBlock  uint64                   `json:"last_input_check_block"`
-	LastOutputCheckBlock uint64                   `json:"last_output_check_block"`
-	ProcessedInputs      uint64                   `json:"processed_inputs"`
-	CreatedAt            time.Time                `json:"created_at"`
-	UpdatedAt            time.Time                `json:"updated_at"`
-	ExecutionParameters  ExecutionParameters      `json:"execution_parameters"`
+	ID                   int64                    `db:"id" json:"-"`
+	Name                 string                   `db:"name" json:"name"`
+	IApplicationAddress  common.Address           `db:"iapplication_address" json:"iapplication_address"`
+	IConsensusAddress    common.Address           `db:"iconsensus_address" json:"iconsensus_address"`
+	IInputBoxAddress     common.Address           `db:"iinputbox_address" json:"iinputbox_address"`
+	TemplateHash         common.Hash              `db:"template_hash" json:"template_hash"`
+	TemplateURI          string                   `db:"template_uri" json:"-"`
+	EpochLength          uint64                   `db:"epoch_length" json:"epoch_length"`
+	DataAvailability     DataAvailabilitySelector `db:"data_availability" json:"data_availability"`
+	State                ApplicationState         `db:"state" json:"state"`
+	Reason               *string                  `db:"reason" json:"reason"`
+	IInputBoxBlock       uint64                   `db:"iinputbox_block" json:"iinputbox_block"`
+	LastInputCheckBlock  uint64                   `db:"last_input_check_block" json:"last_input_check_block"`
+	LastOutputCheckBlock uint64                   `db:"last_output_check_block" json:"last_output_check_block"`
+	ProcessedInputs      uint64                   `db:"processed_inputs" json:"processed_inputs"`
+	CreatedAt            time.Time                `db:"created_at" json:"created_at"`
+	UpdatedAt            time.Time                `db:"updated_at" json:"updated_at"`
+	ExecutionParameters  ExecutionParameters      `db:"execution_parameters" json:"execution_parameters"`
 }
 
 func (a *Application) MarshalJSON() ([]byte, error) {

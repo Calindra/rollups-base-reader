@@ -205,6 +205,7 @@ func (i *InputRepository) FindAll(
 		return nil, fmt.Errorf("error transforming filter to query: %w", err)
 	}
 	query += where
+	query += "ORDER BY index ASC "
 
 	offset, limit, err := commons.ComputePage(first, last, after, before, int(total))
 	if err != nil {
@@ -215,6 +216,7 @@ func (i *InputRepository) FindAll(
 	argsCount += 1
 	query += fmt.Sprintf(`OFFSET $%d `, argsCount)
 	args = append(args, offset)
+
 
 	slog.Debug("Query", "query", query, "args", args, "total", total)
 	stmt, err := i.Db.PreparexContext(ctx, query)

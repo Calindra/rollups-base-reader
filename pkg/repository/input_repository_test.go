@@ -35,6 +35,7 @@ const dbImage = "postgres:17.4-alpine"
 const dbName = "rollups"
 const dbUser = "postgres"
 const dbPassword = "password"
+const openEpoch = 19
 
 const schema = "https://raw.githubusercontent.com/cartesi/rollups-graphql/c818a3ba3aa4bba7f263dc0e0f4d5899637385be/postgres/raw/rollupsdb-dump-202503282237.sql"
 
@@ -104,9 +105,9 @@ func (s *InputRepositorySuite) TearDownTest() {
 
 func (s *InputRepositorySuite) TestInputRepository() {
 	input := model.Input{
-		EpochApplicationID: 1,   // existing app
-		EpochIndex:         23,  // add to actual epoch
-		Index:              171, // unique index
+		EpochApplicationID: 1,         // existing app
+		EpochIndex:         openEpoch, // add to actual epoch
+		Index:              171,       // unique index
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
 		Status:             model.InputCompletionStatus_Accepted,
@@ -122,7 +123,7 @@ func (s *InputRepositorySuite) TestInputRepository() {
 func (s *InputRepositorySuite) TestInputWrongIndex() {
 	input := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              1,
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
@@ -150,7 +151,7 @@ func (s *InputRepositorySuite) TestInputWrongEpoch() {
 func (s *InputRepositorySuite) TestInputWrongApplication() {
 	input := model.Input{
 		EpochApplicationID: 999, // non-existent application
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
@@ -189,7 +190,7 @@ func (s *InputRepositorySuite) TestCountInputs() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -197,7 +198,7 @@ func (s *InputRepositorySuite) TestCountInputs() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -225,7 +226,7 @@ func (s *InputRepositorySuite) TestCountInputs() {
 	}
 	count, err = s.inputRepository.Count(s.ctx, filter)
 	s.NoError(err)
-	s.Equal(uint64(102), count)
+	s.Equal(uint64(100), count)
 }
 
 func (s *InputRepositorySuite) TestCountWrongStatusInputs() {
@@ -278,7 +279,7 @@ func (s *InputRepositorySuite) TestFindAllInputsCount() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -286,7 +287,7 @@ func (s *InputRepositorySuite) TestFindAllInputsCount() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -307,7 +308,7 @@ func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -315,7 +316,7 @@ func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -345,7 +346,7 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -353,7 +354,7 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         openEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -369,7 +370,7 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	inputs, err := s.inputRepository.FindAll(s.ctx, nil, &last, nil, nil, nil)
 	s.NoError(err)
 	s.Len(inputs.Rows, 2)
-	s.Equal(input1.Index, inputs.Rows[0].Index)
+	s.Equal(int(input1.Index), int(inputs.Rows[0].Index))
 }
 
 func TestInputRepositorySuite(t *testing.T) {

@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"log/slog"
 	"math/big"
-	"strconv"
 	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/contracts"
-	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	"github.com/calindra/rollups-base-reader/pkg/model"
 	cRepos "github.com/cartesi/rollups-graphql/pkg/convenience/repository"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -39,6 +38,7 @@ type InputReaderWorker struct {
 	InputBoxAddress    common.Address
 	InputBoxBlock      uint64
 	ApplicationAddress common.Address
+	ApplicationId      int64
 	Repository         cRepos.InputRepository
 	EthClient          *ethclient.Client
 }
@@ -186,7 +186,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	inputBox *contracts.InputBox,
 	startBlockNumber uint64,
 	endTimestamp uint64,
-) ([]cModel.AdvanceInput, error) {
+) ([]model.Input, error) {
 	slog.Debug("ReadInputsByBlockAndTimestamp",
 		"startBlockNumber", startBlockNumber,
 		"dappAddress", w.ApplicationAddress,
@@ -199,7 +199,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	}
 	filter := []common.Address{w.ApplicationAddress}
 	it, err := inputBox.FilterInputAdded(&opts, filter, nil)
-	result := []cModel.AdvanceInput{}
+	result := []model.Input{}
 	if err != nil {
 		return result, fmt.Errorf("inputreader: filter input added: %v", err)
 	}
@@ -212,7 +212,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 			return result, fmt.Errorf("inputreader: failed to get tx header: %w", err)
 		}
 		timestamp := uint64(header.Time)
-		unixTimestamp := time.Unix(int64(header.Time), 0)
+		// unixTimestamp := time.Unix(int64(header.Time), 0)
 		if timestamp < endTimestamp {
 			eventInput := it.Event.Input[4:]
 			abi, err := contracts.InputsMetaData.GetAbi()
@@ -227,28 +227,37 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				return result, err
 			}
 
-			chainId := values[0].(*big.Int).String()
-			appContract := values[1].(common.Address)
-			msgSender := values[2].(common.Address)
-			prevRandao := fmt.Sprintf("0x%s", common.Bytes2Hex(values[5].(*big.Int).Bytes()))
-			payload := common.Bytes2Hex(values[7].([]uint8))
-			inputIndex := int(it.Event.Index.Int64())
+			// chainId := values[0].(*big.Int).String()
+			// appContract := values[1].(common.Address)
+			// msgSender := values[2].(common.Address)
+			// prevRandao := fmt.Sprintf("0x%s", common.Bytes2Hex(values[5].(*big.Int).Bytes()))
+			payload := values[7].([]uint8)
+			inputIndex := it.Event.Index.Uint64()
 
-			input := cModel.AdvanceInput{
-				ID:                     strconv.Itoa(inputIndex),
-				Index:                  -1,
-				Status:                 cModel.CompletionStatusUnprocessed,
-				MsgSender:              msgSender,
-				Payload:                payload,
-				BlockTimestamp:         unixTimestamp,
-				BlockNumber:            header.Number.Uint64(),
-				EspressoBlockNumber:    -1,
-				EspressoBlockTimestamp: time.Unix(-1, 0),
-				InputBoxIndex:          inputIndex,
-				PrevRandao:             prevRandao,
-				AppContract:            appContract,
-				ChainId:                chainId,
+			input := model.Input{
+				Index:                inputIndex,
+				BlockNumber:          header.Number.Uint64(),
+				RawData:              payload,
+				TransactionReference: it.Event.Raw.TxHash,
+				Status:               model.InputCompletionStatus_None,
+				EpochApplicationID:   w.ApplicationId,
 			}
+
+			// input := cModel.AdvanceInput{
+			// 	ID:                     strconv.Itoa(inputIndex),
+			// 	Index:                  -1,
+			// 	Status:                 cModel.CompletionStatusUnprocessed,
+			// 	MsgSender:              msgSender,
+			// 	Payload:                payload,
+			// 	BlockTimestamp:         unixTimestamp,
+			// 	BlockNumber:            header.Number.Uint64(),
+			// 	EspressoBlockNumber:    -1,
+			// 	EspressoBlockTimestamp: time.Unix(-1, 0),
+			// 	InputBoxIndex:          inputIndex,
+			// 	PrevRandao:             prevRandao,
+			// 	AppContract:            appContract,
+			// 	ChainId:                chainId,
+			// }
 			slog.Debug("append InputAdded", "timestamp", timestamp, "endTimestamp", endTimestamp)
 			result = append(result, input)
 		} else {

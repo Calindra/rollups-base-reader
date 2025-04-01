@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -20,13 +21,13 @@ func (a *AppRepository) FindAll(
 	limit int,
 	offset int,
 	tx *sqlx.Tx,
-) ([]any, error) {
+) ([]model.Application, error) {
 	query := `SELECT id, name, app_contract
 	FROM application
 	ORDER BY id
 	LIMIT $1 OFFSET $2`
 	args := []any{limit, offset}
-	apps := []any{}
+	apps := []model.Application{}
 
 	// Create a prepared statement
 	stmt, err := tx.PreparexContext(ctx, query)
@@ -44,27 +45,27 @@ func (a *AppRepository) FindAll(
 	return apps, nil
 }
 
-func (a *AppRepository) Exists(ctx context.Context, applicationId int64, tx *sqlx.Tx) (bool, error) {
-	query := `SELECT EXISTS (
-		SELECT 1
-		FROM application
-		WHERE id = $1
-	)`
-	args := []any{applicationId}
-	var exists bool
+func (a *AppRepository) List(
+	ctx context.Context,
+) ([]model.Application, error) {
+	query := `SELECT id, name, iapplication_address
+	FROM application
+	ORDER BY id`
+
+	apps := []model.Application{}
 
 	// Create a prepared statement
-	stmt, err := tx.PreparexContext(ctx, query)
+	stmt, err := a.Db.PreparexContext(ctx, query)
 	if err != nil {
-		return false, fmt.Errorf("error preparing application exists query: %w", err)
+		return nil, fmt.Errorf("error preparing application query: %w", err)
 	}
 	defer stmt.Close()
 
 	// Execute the query
-	err = stmt.GetContext(ctx, &exists, args...)
+	err = stmt.SelectContext(ctx, &apps)
 	if err != nil {
-		return false, fmt.Errorf("error checking if application exists: %w", err)
+		return nil, fmt.Errorf("error querying applications: %w", err)
 	}
 
-	return exists, nil
+	return apps, nil
 }
