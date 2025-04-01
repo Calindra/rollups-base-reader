@@ -98,8 +98,8 @@ func CreateTypedData(
 	return typedData
 }
 
-func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]model.Input, error) {
-	inputs := []model.Input{}
+func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]model.InputExtra, error) {
+	inputs := []model.InputExtra{}
 	var paioBatch PaioBatch
 	if err := json.Unmarshal([]byte(jsonStr), &paioBatch); err != nil {
 		return inputs, fmt.Errorf("unmarshal paio batch: %w", err)
@@ -132,21 +132,26 @@ func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]model.Input, er
 			return inputs, err
 		}
 		slog.Debug("SaveTransaction", "jsonPayload", string(jsonPayload))
-		_, _, signature, err := commons.ExtractSigAndData(string(jsonPayload))
+		msgSender, _, signature, err := commons.ExtractSigAndData(string(jsonPayload))
 		if err != nil {
 			slog.Error("Error ExtractSigAndData message:", "err", err)
 			return inputs, err
 		}
 
 		txHex := common.BytesToHash(crypto.Keccak256(signature))
-		input := model.Input{
-			Index: 0,
-			BlockNumber: 0,
-			TransactionReference: txHex,
-			Status: model.InputCompletionStatus_None,
-			EpochIndex: 0,
-			EpochApplicationID: 0,
-			RawData:  tx.Data,
+		input := model.InputExtra{
+			MsgSender:   msgSender,
+			AppContract: common.HexToAddress(tx.App),
+			ChainId:     chainId.Uint64(),
+			Input: model.Input{
+				Index:                0,
+				BlockNumber:          0,
+				TransactionReference: txHex,
+				Status:               model.InputCompletionStatus_None,
+				EpochIndex:           0,
+				EpochApplicationID:   0,
+				RawData:              tx.Data,
+			},
 		}
 		inputs = append(inputs, input)
 	}
