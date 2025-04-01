@@ -38,7 +38,7 @@ type InputReaderWorker struct {
 	InputBoxAddress    common.Address
 	InputBoxBlock      uint64
 	ApplicationAddress common.Address
-	ApplicationId      int64
+	ApplicationId      *int64
 	Repository         cRepos.InputRepository
 	EthClient          *ethclient.Client
 }
@@ -187,6 +187,14 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	startBlockNumber uint64,
 	endTimestamp uint64,
 ) ([]model.Input, error) {
+	// Check if the application ID is set
+	var appID int64
+	if w.ApplicationId != nil {
+		appID = *w.ApplicationId
+	} else {
+		return nil, fmt.Errorf("inputreader: application id is not set")
+	}
+
 	slog.Debug("ReadInputsByBlockAndTimestamp",
 		"startBlockNumber", startBlockNumber,
 		"dappAddress", w.ApplicationAddress,
@@ -227,10 +235,6 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				return result, err
 			}
 
-			// chainId := values[0].(*big.Int).String()
-			// appContract := values[1].(common.Address)
-			// msgSender := values[2].(common.Address)
-			// prevRandao := fmt.Sprintf("0x%s", common.Bytes2Hex(values[5].(*big.Int).Bytes()))
 			payload := values[7].([]uint8)
 			inputIndex := it.Event.Index.Uint64()
 
@@ -240,24 +244,8 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				RawData:              payload,
 				TransactionReference: it.Event.Raw.TxHash,
 				Status:               model.InputCompletionStatus_None,
-				EpochApplicationID:   w.ApplicationId,
+				EpochApplicationID:   appID,
 			}
-
-			// input := cModel.AdvanceInput{
-			// 	ID:                     strconv.Itoa(inputIndex),
-			// 	Index:                  -1,
-			// 	Status:                 cModel.CompletionStatusUnprocessed,
-			// 	MsgSender:              msgSender,
-			// 	Payload:                payload,
-			// 	BlockTimestamp:         unixTimestamp,
-			// 	BlockNumber:            header.Number.Uint64(),
-			// 	EspressoBlockNumber:    -1,
-			// 	EspressoBlockTimestamp: time.Unix(-1, 0),
-			// 	InputBoxIndex:          inputIndex,
-			// 	PrevRandao:             prevRandao,
-			// 	AppContract:            appContract,
-			// 	ChainId:                chainId,
-			// }
 			slog.Debug("append InputAdded", "timestamp", timestamp, "endTimestamp", endTimestamp)
 			result = append(result, input)
 		} else {
