@@ -11,8 +11,8 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/cartesi/rollups-graphql/pkg/commons"
-	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -98,8 +98,8 @@ func CreateTypedData(
 	return typedData
 }
 
-func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]cModel.AdvanceInput, error) {
-	inputs := []cModel.AdvanceInput{}
+func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]model.Input, error) {
+	inputs := []model.Input{}
 	var paioBatch PaioBatch
 	if err := json.Unmarshal([]byte(jsonStr), &paioBatch); err != nil {
 		return inputs, fmt.Errorf("unmarshal paio batch: %w", err)
@@ -132,27 +132,23 @@ func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]cModel.AdvanceI
 			return inputs, err
 		}
 		slog.Debug("SaveTransaction", "jsonPayload", string(jsonPayload))
-		msgSender, _, signature, err := commons.ExtractSigAndData(string(jsonPayload))
+		_, _, signature, err := commons.ExtractSigAndData(string(jsonPayload))
 		if err != nil {
 			slog.Error("Error ExtractSigAndData message:", "err", err)
 			return inputs, err
 		}
 
-		strPayload := common.Bytes2Hex(tx.Data)
-
-		txId := fmt.Sprintf("0x%s", common.Bytes2Hex(crypto.Keccak256(signature)))
-		inputs = append(inputs, cModel.AdvanceInput{
-			Index:               int(0),
-			ID:                  txId,
-			MsgSender:           msgSender,
-			Payload:             strPayload,
-			AppContract:         common.HexToAddress(tx.App),
-			AvailBlockNumber:    0,
-			AvailBlockTimestamp: time.Unix(0, 0),
-			InputBoxIndex:       -2,
-			Type:                "Avail",
-			ChainId:             chainId.String(),
-		})
+		txHex := common.BytesToHash(crypto.Keccak256(signature))
+		input := model.Input{
+			Index: 0,
+			BlockNumber: 0,
+			TransactionReference: txHex,
+			Status: model.InputCompletionStatus_None,
+			EpochIndex: 0,
+			EpochApplicationID: 0,
+			RawData:  tx.Data,
+		}
+		inputs = append(inputs, input)
 	}
 	return inputs, nil
 }
