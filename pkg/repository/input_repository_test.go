@@ -36,7 +36,7 @@ const dbName = "rollups"
 const dbUser = "postgres"
 const dbPassword = "password"
 
-const schema = "https://raw.githubusercontent.com/cartesi/rollups-graphql/8e63682b2e99282cdfee3f13b608d0316c22a484/postgres/raw/rollupsdb-dump-202503191059.sql"
+const schema = "https://raw.githubusercontent.com/cartesi/rollups-graphql/c818a3ba3aa4bba7f263dc0e0f4d5899637385be/postgres/raw/rollupsdb-dump-202503282237.sql"
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
 type StdoutLogConsumer struct{}
