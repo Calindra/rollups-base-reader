@@ -192,16 +192,16 @@ type ExecutionParameters struct {
 }
 
 type Epoch struct {
-	ApplicationID        int64        `sql:"primary_key" json:"-"`
-	Index                uint64       `sql:"primary_key" json:"index"`
-	FirstBlock           uint64       `json:"first_block"`
-	LastBlock            uint64       `json:"last_block"`
-	ClaimHash            *common.Hash `json:"claim_hash"`
-	ClaimTransactionHash *common.Hash `json:"claim_transaction_hash"`
-	Status               EpochStatus  `json:"status"`
-	VirtualIndex         uint64       `json:"virtual_index"`
-	CreatedAt            time.Time    `json:"created_at"`
-	UpdatedAt            time.Time    `json:"updated_at"`
+	ApplicationID        int64        `sql:"primary_key" db:"application_id" json:"-"`
+	Index                uint64       `sql:"primary_key" db:"index" json:"index"`
+	FirstBlock           uint64       `db:"first_block" json:"first_block"`
+	LastBlock            uint64       `db:"last_block" json:"last_block"`
+	ClaimHash            *common.Hash `db:"claim_hash" json:"claim_hash"`
+	ClaimTransactionHash *common.Hash `db:"claim_transaction_hash" json:"claim_transaction_hash"`
+	Status               EpochStatus  `db:"status" json:"status"`
+	VirtualIndex         uint64       `db:"virtual_index" json:"virtual_index"`
+	CreatedAt            time.Time    `db:"created_at" json:"created_at"`
+	UpdatedAt            time.Time    `db:"updated_at" json:"updated_at"`
 }
 
 func (e *Epoch) MarshalJSON() ([]byte, error) {
