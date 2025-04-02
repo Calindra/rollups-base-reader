@@ -82,12 +82,12 @@ func (s *InputRepositorySuite) TearDownTest() {
 
 func (s *InputRepositorySuite) TestInputRepository() {
 	input := model.Input{
-		EpochApplicationID:   1,                 // existing app
-		EpochIndex:           commons.OpenEpoch, // add to actual epoch
-		Index:                171,               // unique index
-		BlockNumber:          0,
-		RawData:              []byte("test data"),
-		Status:               model.InputCompletionStatus_Accepted,
+		EpochApplicationID: 1,                 // existing app
+		EpochIndex:         commons.OpenEpoch, // add to actual epoch
+		Index:              171,               // unique index
+		BlockNumber:        0,
+		RawData:            []byte("test data"),
+		Status:             model.InputCompletionStatus_Accepted,
 	}
 	err := s.inputRepository.Create(s.ctx, input)
 	s.NoError(err)
