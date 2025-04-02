@@ -284,18 +284,18 @@ func (e EpochStatus) String() string {
 }
 
 type Input struct {
-	EpochApplicationID   int64                 `sql:"primary_key" json:"-"`
-	EpochIndex           uint64                `json:"epoch_index"`
-	Index                uint64                `sql:"primary_key" json:"index"`
-	BlockNumber          uint64                `json:"block_number"`
-	RawData              []byte                `json:"raw_data"`
-	Status               InputCompletionStatus `json:"status"`
-	MachineHash          *common.Hash          `json:"machine_hash"`
-	OutputsHash          *common.Hash          `json:"outputs_hash"`
-	TransactionReference common.Hash           `json:"transaction_reference"`
-	SnapshotURI          *string               `json:"-"`
-	CreatedAt            time.Time             `json:"created_at"`
-	UpdatedAt            time.Time             `json:"updated_at"`
+	EpochApplicationID   int64                 `sql:"primary_key" db:"epoch_application_id" json:"-"`
+	EpochIndex           uint64                `db:"epoch_index" json:"epoch_index"`
+	Index                uint64                `sql:"primary_key" db:"index" json:"index"`
+	BlockNumber          uint64                `db:"block_number" json:"block_number"`
+	RawData              []byte                `db:"raw_data" json:"raw_data"`
+	Status               InputCompletionStatus `db:"status" json:"status"`
+	MachineHash          *common.Hash          `db:"machine_hash" json:"machine_hash"`
+	OutputsHash          *common.Hash          `db:"outputs_hash" json:"outputs_hash"`
+	TransactionReference *common.Hash          `db:"transaction_reference" json:"transaction_reference"`
+	SnapshotURI          *string               `db:"snapshot_uri" json:"-"`
+	CreatedAt            time.Time             `db:"created_at" json:"created_at"`
+	UpdatedAt            time.Time             `db:"updated_at" json:"updated_at"`
 }
 
 func (i *Input) MarshalJSON() ([]byte, error) {
@@ -537,8 +537,8 @@ func Pointer[T any](v T) *T {
 type InputExtra struct {
 	Input
 	BlockTimestamp time.Time
-	AppContract   common.Address
+	AppContract    common.Address
 	MsgSender      common.Address
 	ChainId        uint64
-	PrevRandao      common.Hash
+	PrevRandao     common.Hash
 }
