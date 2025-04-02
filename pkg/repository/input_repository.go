@@ -146,15 +146,7 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 }
 
 func (i *InputRepository) FindOne(ctx context.Context, applicationId int64, index uint64) (*model.Input, error) {
-	query := `SELECT
-		epoch_application_id,
-		epoch_index,
-		index,
-		block_number,
-		raw_data,
-		status,
-		created_at,
-		updated_at
+	query := `SELECT *
 	FROM input
 	WHERE epoch_application_id = $1 AND index = $2`
 	args := []any{applicationId, index}
@@ -167,8 +159,7 @@ func (i *InputRepository) FindOne(ctx context.Context, applicationId int64, inde
 	defer stmt.Close()
 
 	input := &model.Input{}
-	row := stmt.QueryRowxContext(ctx, args...)
-	err = row.Scan(&input.EpochApplicationID, &input.EpochIndex, &input.Index, &input.BlockNumber, &input.RawData, &input.Status, &input.CreatedAt, &input.UpdatedAt)
+	err = stmt.GetContext(ctx, input, args...)
 
 	if err != nil {
 		return nil, err
