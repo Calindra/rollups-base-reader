@@ -139,6 +139,7 @@ func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]model.InputExtr
 		}
 
 		txHex := common.BytesToHash(crypto.Keccak256(signature))
+		slog.Debug("Tx", "hash", txHex)
 		input := model.InputExtra{
 			MsgSender:   msgSender,
 			AppContract: common.HexToAddress(tx.App),
