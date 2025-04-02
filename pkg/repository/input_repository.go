@@ -15,7 +15,7 @@ import (
 )
 
 type InputRepository struct {
-	Db              *sqlx.DB
+	Db *sqlx.DB
 }
 
 func NewInputRepository(db *sqlx.DB) *InputRepository {
@@ -112,9 +112,13 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		index,
 		block_number,
 		raw_data,
-		status
-	) VALUES ($1, $2, $3, $4, $5, $6)`
-	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status}
+		status,
+		machine_hash,
+		outputs_hash,
+		transaction_reference,
+		snapshot_uri
+	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status, input.MachineHash, input.OutputsHash, input.TransactionReference, input.SnapshotURI}
 
 	// Check if the transaction is already started
 	tx, err := util.NewTx(ctx, i.Db)
@@ -181,16 +185,7 @@ func (i *InputRepository) FindAll(
 		slog.Error("database error", "err", err)
 		return nil, err
 	}
-	query := `SELECT
-		epoch_application_id,
-		epoch_index,
-		index,
-		block_number,
-		raw_data,
-		status,
-		created_at,
-		updated_at
-	FROM input `
+	query := `SELECT * FROM input `
 	where, args, argsCount, err := transformToInputQuery(filter)
 	if err != nil {
 		return nil, fmt.Errorf("error transforming filter to query: %w", err)
@@ -208,7 +203,6 @@ func (i *InputRepository) FindAll(
 	query += fmt.Sprintf(`OFFSET $%d `, argsCount)
 	args = append(args, offset)
 
-
 	slog.Debug("Query", "query", query, "args", args, "total", total)
 	stmt, err := i.Db.PreparexContext(ctx, query)
 	if err != nil {
@@ -217,29 +211,9 @@ func (i *InputRepository) FindAll(
 	defer stmt.Close()
 
 	var inputs []model.Input
-	rows, err := stmt.QueryxContext(ctx, args...)
-	if err != nil {
-		return nil, err
+	if err = stmt.SelectContext(ctx, &inputs, args...); err != nil {
+		return nil, fmt.Errorf("error executing find all query: %w", err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var input model.Input
-		err = rows.Scan(&input.EpochApplicationID, &input.EpochIndex, &input.Index, &input.BlockNumber, &input.RawData, &input.Status, &input.CreatedAt, &input.UpdatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("error scanning input row: %w", err)
-		}
-		inputs = append(inputs, input)
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return nil, fmt.Errorf("error iterating over rows: %w", err)
-	}
-
-	// err = stmt.SelectContext(ctx, &inputs, args...)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error executing find all query: %w", err)
-	// }
 
 	pageResult := &commons.PageResult[model.Input]{
 		Rows:   inputs,

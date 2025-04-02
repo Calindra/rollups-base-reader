@@ -147,7 +147,7 @@ func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]model.InputExtr
 			Input: model.Input{
 				Index:                0,
 				BlockNumber:          0,
-				TransactionReference: txHex,
+				TransactionReference: &txHex,
 				Status:               model.InputCompletionStatus_None,
 				EpochIndex:           0,
 				EpochApplicationID:   0,
