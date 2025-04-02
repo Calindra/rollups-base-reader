@@ -32,12 +32,11 @@ type Model interface {
 
 // This worker reads inputs from Ethereum and puts them in the model.
 type InputReaderWorker struct {
-	Model              Model
-	Provider           string
-	InputBoxAddress    common.Address
-	InputBoxBlock      uint64
-	ApplicationAddress common.Address
-	EthClient          *ethclient.Client
+	Model           Model
+	Provider        string
+	InputBoxAddress common.Address
+	InputBoxBlock   uint64
+	EthClient       *ethclient.Client
 }
 
 func (w InputReaderWorker) String() string {
@@ -65,128 +64,17 @@ func (w *InputReaderWorker) ChainID() (*big.Int, error) {
 	return client.ChainID(ctx)
 }
 
-// Read inputs starting from the input box deployment block until the latest block.
-func (w *InputReaderWorker) ReadPastInputs(
-	ctx context.Context,
-	client *ethclient.Client,
-	inputBox *contracts.InputBox,
-	startBlockNumber uint64,
-	endBlockNumber *uint64,
-) error {
-	if endBlockNumber != nil {
-		slog.Debug("readPastInputs",
-			"startBlockNumber", startBlockNumber,
-			"endBlockNumber", *endBlockNumber,
-			"dappAddress", w.ApplicationAddress,
-		)
-	} else {
-		slog.Debug("readPastInputs",
-			"startBlockNumber", startBlockNumber,
-			"dappAddress", w.ApplicationAddress,
-		)
-	}
-	opts := bind.FilterOpts{
-		Context: ctx,
-		Start:   startBlockNumber,
-		End:     endBlockNumber,
-	}
-	filter := []common.Address{w.ApplicationAddress}
-	it, err := inputBox.FilterInputAdded(&opts, filter, nil)
-	if err != nil {
-		return fmt.Errorf("inputreader: filter input added: %v", err)
-	}
-	defer it.Close()
-	for it.Next() {
-		w.InputBoxBlock = it.Event.Raw.BlockNumber - 1
-		if err := w.addInput(ctx, client, it.Event); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Add the input to the model.
-func (w InputReaderWorker) addInput(
-	ctx context.Context,
-	client *ethclient.Client,
-	event *contracts.InputBoxInputAdded,
-) error {
-	header, err := client.HeaderByHash(ctx, event.Raw.BlockHash)
-	if err != nil {
-		return fmt.Errorf("inputreader: failed to get tx header: %w", err)
-	}
-	timestamp := time.Unix(int64(header.Time), 0)
-
-	// use abi to decode the input
-	eventInput := event.Input[4:]
-	abi, err := contracts.InputsMetaData.GetAbi()
-	if err != nil {
-		slog.Error("Error parsing abi", "err", err)
-		return err
-	}
-
-	values, err := abi.Methods["EvmAdvance"].Inputs.UnpackValues(eventInput)
-	if err != nil {
-		slog.Error("Error parsing abi", "err", err)
-		return err
-	}
-
-	chainId := values[0].(*big.Int).String()
-	msgSender := values[2].(common.Address)
-	prevRandao := fmt.Sprintf("0x%s", common.Bytes2Hex(values[5].(*big.Int).Bytes()))
-	payload := common.Bytes2Hex(values[7].([]uint8))
-	inputIndex := int(event.Index.Int64())
-
-	slog.Debug("inputreader: read event",
-		"dapp", event.AppContract,
-		"input.index", event.Index,
-		"sender", msgSender,
-		"input", common.Bytes2Hex(event.Input),
-		"payload", payload,
-		slog.Group("block",
-			"number", header.Number,
-			"timestamp", timestamp,
-			"prevRandao", prevRandao,
-		),
-	)
-
-	if w.ApplicationAddress != event.AppContract {
-		msg := fmt.Sprintf("The dapp address is wrong: %s. It should be %s",
-			event.AppContract.Hex(),
-			w.ApplicationAddress,
-		)
-		slog.Warn(msg)
-		return nil
-	}
-
-	err = w.Model.AddAdvanceInput(
-		msgSender,
-		payload,
-		event.Raw.BlockNumber,
-		timestamp,
-		inputIndex,
-		prevRandao,
-		event.AppContract,
-		chainId,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	ctx context.Context,
 	client *ethclient.Client,
 	inputBox *contracts.InputBox,
 	startBlockNumber uint64,
 	endTimestamp uint64,
+	appAddresses []common.Address,
 ) ([]model.InputExtra, error) {
 	slog.Debug("ReadInputsByBlockAndTimestamp",
 		"startBlockNumber", startBlockNumber,
-		"dappAddress", w.ApplicationAddress,
+		"dappAddresses", appAddresses,
 		"endTimestamp", endTimestamp,
 	)
 
@@ -194,7 +82,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 		Context: ctx,
 		Start:   startBlockNumber,
 	}
-	filter := []common.Address{w.ApplicationAddress}
+	filter := appAddresses
 	it, err := inputBox.FilterInputAdded(&opts, filter, nil)
 	result := []model.InputExtra{}
 	if err != nil {
@@ -243,9 +131,9 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				},
 				BlockTimestamp: unixTimestamp,
 				AppContract:    appContract,
-				MsgSender: 	msgSender,
-				ChainId: 	chainId,
-				PrevRandao: prevRandao,
+				MsgSender:      msgSender,
+				ChainId:        chainId,
+				PrevRandao:     prevRandao,
 			}
 			slog.Debug("append InputAdded", "timestamp", timestamp, "endTimestamp", endTimestamp)
 			result = append(result, input)

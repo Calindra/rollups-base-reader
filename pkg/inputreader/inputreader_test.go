@@ -131,10 +131,9 @@ func (s *InputReaderTestSuite) TestFindAllInputsByBlockAndTimestampLT() {
 		Provider:           "",
 		InputBoxAddress:    inputBoxAddress,
 		InputBoxBlock:      1,
-		ApplicationAddress: appAddress,
 	}
 
-	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, timestamp)
+	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, timestamp, []common.Address{appAddress})
 	s.NoError(err)
 	s.NotNil(inputs)
 	s.Len(inputs, 1)
@@ -149,7 +148,7 @@ func (s *InputReaderTestSuite) TestZeroResultsFindAllInputsByBlockAndTimestampLT
 	inputBoxAddress := common.HexToAddress(devnet.InputBoxAddress)
 	inputBox, err := contracts.NewInputBox(inputBoxAddress, client)
 	s.NoError(err)
-	err = devnet.AddInput(ctx, s.rpcUrl, common.Hex2Bytes("deadbeef"), "0x75135d8ADb7180640d29d822D9AD59E83E8695b2")
+	err = devnet.AddInput(ctx, s.rpcUrl, common.Hex2Bytes("deadbeef"), devnet.ApplicationAddress)
 	s.NoError(err)
 	l1FinalizedPrevHeight := uint64(1)
 	timestamp := uint64(time.Now().UnixMilli())
@@ -158,13 +157,12 @@ func (s *InputReaderTestSuite) TestZeroResultsFindAllInputsByBlockAndTimestampLT
 		Provider:           "",
 		InputBoxAddress:    inputBoxAddress,
 		InputBoxBlock:      1,
-		ApplicationAddress: appAddress,
 	}
 	// block, err := client.BlockByNumber(ctx, nil)
 	// s.NoError(err)
 	// s.NotNil(block)
 	// s.Equal(uint64(19), block.NumberU64())
-	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, (timestamp/1000)-300)
+	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, (timestamp/1000)-300, []common.Address{appAddress})
 	s.NoError(err)
 	s.NotNil(inputs)
 	s.Equal(0, len(inputs))
