@@ -22,7 +22,7 @@ func (a *AppRepository) FindOneByContract(
 	ctx context.Context,
 	address common.Address,
 ) (*model.Application, error) {
-	query := `SELECT id, name, iapplication_address
+	query := `SELECT *
 	FROM application
 	WHERE iapplication_address = $1`
 	args := []any{address}
@@ -47,7 +47,7 @@ func (a *AppRepository) FindOneByContract(
 func (a *AppRepository) List(
 	ctx context.Context,
 ) ([]model.Application, error) {
-	query := `SELECT id, name, iapplication_address
+	query := `SELECT *
 	FROM application
 	ORDER BY id`
 
