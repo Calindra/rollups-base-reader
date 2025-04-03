@@ -115,6 +115,14 @@ func (s *AppRepositorySuite) TestFindOneByContract() {
 	s.Equal(contractAddress.Hex(), app.IApplicationAddress.String())
 }
 
+func (s *AppRepositorySuite) TestUpdateDAByContract() {
+	ctx, cancel := context.WithCancel(s.ctx)
+	defer cancel()
+	da := model.DataAvailabilitySelector{0x12, 0x34, 0x56, 0x78}
+	err := s.appRepository.UpdateDA(ctx, 1, da)
+	s.NoError(err)
+}
+
 func (s *AppRepositorySuite) TestFindByDA() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
@@ -31,7 +32,7 @@ func (a *AppRepository) FindOneByContract(
 
 	// Create a prepared statement
 	stmt, err := a.Db.PreparexContext(ctx, query)
-	if (err != nil) {
+	if err != nil {
 		return nil, fmt.Errorf("error preparing application query: %w", err)
 	}
 	defer stmt.Close()
@@ -68,6 +69,44 @@ func (a *AppRepository) FindByDA(ctx context.Context, da model.DataAvailabilityS
 	}
 
 	return apps, nil
+}
+
+// Update field DA
+func (a *AppRepository) UpdateDA(
+	ctx context.Context,
+	applicationId int64,
+	da model.DataAvailabilitySelector,
+) error {
+	query := `UPDATE application
+	SET data_availability = $1
+	WHERE id = $2`
+	args := []any{da[:], applicationId}
+
+	tx, err := commons.NewTx(ctx, a.Db)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Create a prepared statement
+	stmt, err := tx.PreparexContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("error preparing application update query: %w", err)
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	_, err = stmt.ExecContext(ctx, args...)
+	if err != nil {
+		return fmt.Errorf("error updating application with ID %d: %w", applicationId, err)
+	}
+
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
+	}
+	slog.Debug("updated application data availability", "applicationId", applicationId, "dataAvailability", da)
+	return nil
 }
 
 func (a *AppRepository) List(
