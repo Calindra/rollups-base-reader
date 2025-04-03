@@ -27,6 +27,10 @@ type AppRepositorySuite struct {
 	schemaDir     string
 }
 
+func TestAppRepository(t *testing.T) {
+	suite.Run(t, new(AppRepositorySuite))
+}
+
 func (s *AppRepositorySuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
@@ -108,8 +112,4 @@ func (s *AppRepositorySuite) TestFindOneByContract() {
 	s.Equal(1, int(app.ID))
 	s.Equal("echo-dapp", app.Name)
 	s.Equal(contractAddress.Hex(), app.IApplicationAddress.String())
-}
-
-func TestAppRepository(t *testing.T) {
-	suite.Run(t, new(AppRepositorySuite))
 }

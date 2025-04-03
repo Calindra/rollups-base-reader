@@ -27,6 +27,10 @@ type EpochRepositorySuite struct {
 	schemaDir       string
 }
 
+func TestEpochRepository(t *testing.T) {
+	suite.Run(t, new(EpochRepositorySuite))
+}
+
 func (s *EpochRepositorySuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
@@ -91,8 +95,4 @@ func (s *EpochRepositorySuite) TestFindOne() {
 	s.NotNil(epoch)
 	s.Equal(18, int(epoch.Index))
 	s.Equal(model.EpochStatus_ClaimComputed, epoch.Status)
-}
-
-func TestEpochRepository(t *testing.T) {
-	suite.Run(t, new(EpochRepositorySuite))
 }

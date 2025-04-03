@@ -29,6 +29,10 @@ type InputRepositorySuite struct {
 	schemaDir       string
 }
 
+func TestInputRepositorySuite(t *testing.T) {
+	suite.Run(t, new(InputRepositorySuite))
+}
+
 func (s *InputRepositorySuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
@@ -350,6 +354,3 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	s.Equal(int(input1.Index), int(inputs.Rows[0].Index))
 }
 
-func TestInputRepositorySuite(t *testing.T) {
-	suite.Run(t, new(InputRepositorySuite))
-}
