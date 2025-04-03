@@ -138,20 +138,32 @@ func ParsePaioBatchToInputs(jsonStr string, chainId *big.Int) ([]model.InputExtr
 			return inputs, err
 		}
 
-		txHex := common.BytesToHash(crypto.Keccak256(signature))
+		txHex := fmt.Sprintf("0x%s", common.Bytes2Hex(crypto.Keccak256(signature)))
+		data := AvailData{
+			Transaction: txHex,
+			Data:        tx.Data,
+			AppContract: common.HexToAddress(tx.App),
+			MsgSender:   msgSender,
+		}
+
+		encoded, err := json.Marshal(data)
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling data: %w", err)
+		}
+
 		slog.Debug("Tx", "hash", txHex)
+
 		input := model.InputExtra{
 			MsgSender:   msgSender,
 			AppContract: common.HexToAddress(tx.App),
 			ChainId:     chainId.Uint64(),
 			Input: model.Input{
-				Index:                0,
-				BlockNumber:          0,
-				TransactionReference: &txHex,
-				Status:               model.InputCompletionStatus_None,
-				EpochIndex:           0,
-				EpochApplicationID:   0,
-				RawData:              tx.Data,
+				Index:              0,
+				BlockNumber:        0,
+				Status:             model.InputCompletionStatus_None,
+				EpochIndex:         0,
+				EpochApplicationID: 0,
+				RawData:            encoded,
 			},
 		}
 		inputs = append(inputs, input)
