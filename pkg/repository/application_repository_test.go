@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
+	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -112,4 +113,30 @@ func (s *AppRepositorySuite) TestFindOneByContract() {
 	s.Equal(1, int(app.ID))
 	s.Equal("echo-dapp", app.Name)
 	s.Equal(contractAddress.Hex(), app.IApplicationAddress.String())
+}
+
+func (s *AppRepositorySuite) TestFindByDA() {
+	ctx, cancel := context.WithCancel(s.ctx)
+	defer cancel()
+
+	// Call FindByDA with InputBox DA selector
+	apps, err := s.appRepository.FindByDA(ctx, model.DataAvailability_InputBox)
+	s.NoError(err)
+
+	// Verify we have application(s) using InputBox DA
+	s.NotEmpty(apps, "Should find at least one application with InputBox data availability")
+
+	// Check each app found has the correct DA selector
+	for _, app := range apps {
+		s.Equal(model.DataAvailability_InputBox, app.DataAvailability,
+			"Application should have InputBox data availability")
+	}
+
+	// Create a custom DA selector for testing
+	customDA := model.DataAvailabilitySelector{0xa1, 0xb2, 0xc3, 0xd4}
+
+	// Query with the custom selector (which likely doesn't exist in the DB)
+	customApps, err := s.appRepository.FindByDA(ctx, customDA)
+	s.NoError(err)
+	s.Empty(customApps, "Should not find any application with custom data availability")
 }

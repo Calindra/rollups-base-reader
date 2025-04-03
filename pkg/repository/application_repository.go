@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/ethereum/go-ethereum/common"
@@ -30,7 +31,7 @@ func (a *AppRepository) FindOneByContract(
 
 	// Create a prepared statement
 	stmt, err := a.Db.PreparexContext(ctx, query)
-	if err != nil {
+	if (err != nil) {
 		return nil, fmt.Errorf("error preparing application query: %w", err)
 	}
 	defer stmt.Close()
@@ -42,6 +43,31 @@ func (a *AppRepository) FindOneByContract(
 	}
 
 	return &app, nil
+}
+
+func (a *AppRepository) FindByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error) {
+	query := `SELECT *
+	FROM application
+	WHERE data_availability = $1`
+
+	args := []any{da[:]}
+	apps := []model.Application{}
+
+	slog.Debug("querying applications with data availability", "query", query, "args", args)
+	// Create a prepared statement
+	stmt, err := a.Db.PreparexContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing application query: %w", err)
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	err = stmt.SelectContext(ctx, &apps, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error querying applications with data availability: %w", err)
+	}
+
+	return apps, nil
 }
 
 func (a *AppRepository) List(
