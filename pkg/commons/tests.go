@@ -22,9 +22,8 @@ type StdoutLogConsumer struct{}
 // Accept prints the log to stdout
 func (lc *StdoutLogConsumer) Accept(l testcontainers.Log) {
 	if l.LogType == testcontainers.StderrLog {
-		slog.Error(string(l.Content))
-		return
+		slog.Debug(string(l.Content))
+	} else {
+		slog.Info(string(l.Content))
 	}
-
-	slog.Debug(string(l.Content))
 }
