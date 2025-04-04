@@ -124,7 +124,6 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 					Index:                inputIndex,
 					BlockNumber:          header.Number.Uint64(),
 					RawData:              payload,
-					TransactionReference: &it.Event.Raw.TxHash,
 					Status:               model.InputCompletionStatus_None,
 					EpochApplicationID:   -1,
 					EpochIndex:           0,
