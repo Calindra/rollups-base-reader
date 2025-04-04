@@ -105,8 +105,8 @@ type DataAvailabilitySelector [DATA_AVAILABILITY_SELECTOR_SIZE]byte
 var (
 	// ABI encoded "InputBox(address)"
 	DataAvailability_InputBox = DataAvailabilitySelector{0xb1, 0x2c, 0x9e, 0xde}
-	// Random
-	DataAvailability_Avail = DataAvailabilitySelector{0x8b, 0x1c, 0x9e, 0xde}
+	// string: avda
+	DataAvailability_Avail = DataAvailabilitySelector{0x61, 0x76, 0x64, 0x61}
 )
 
 func (d *DataAvailabilitySelector) MarshalJSON() ([]byte, error) {
