@@ -63,7 +63,7 @@ func (s *InputReaderTestSuite) SetupTest() {
 	commons.ConfigureLog(slog.LevelDebug)
 	slog.Debug("Setup!!!")
 	var w supervisor.SupervisorWorker
-	w.Name = "TesteInputter"
+	w.Name = "TestInputter"
 	s.ctx, s.timeoutCancel = context.WithTimeout(context.Background(), util.DefaultTimeout)
 	s.workerResult = make(chan error)
 
