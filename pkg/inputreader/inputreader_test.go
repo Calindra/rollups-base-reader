@@ -38,16 +38,20 @@ type InputReaderTestSuite struct {
 	workerCancel  context.CancelFunc
 	workerResult  chan error
 	rpcUrl        string
-	schemaDir     string
+	schemaPath    string
 	image         *postgres.PostgresContainer
+}
+
+func TestInputterTestSuite(t *testing.T) {
+	suite.Run(t, new(InputReaderTestSuite))
 }
 
 func (s *InputReaderTestSuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
 	s.NoError(err)
-	s.schemaDir = filepath.Join(tmpDir, "schema.sql")
-	schemaFile, err := os.Create(s.schemaDir)
+	s.schemaPath = filepath.Join(tmpDir, "schema.sql")
+	schemaFile, err := os.Create(s.schemaPath)
 	s.NoError(err)
 	defer schemaFile.Close()
 
@@ -68,8 +72,6 @@ func (s *InputReaderTestSuite) SetupTest() {
 	s.workerResult = make(chan error)
 
 	s.workerCtx, s.workerCancel = context.WithCancel(s.ctx)
-	// anvilLocation, err := devnet.CheckAnvilAndInstall(s.ctx)
-	// s.NoError(err)
 	w.Workers = append(w.Workers, devnet.AnvilWorker{
 		Address:  devnet.AnvilDefaultAddress,
 		Port:     devnet.AnvilDefaultPort,
@@ -80,7 +82,7 @@ func (s *InputReaderTestSuite) SetupTest() {
 	// Database
 	container, err := postgres.Run(s.ctx, util.DbImage,
 		postgres.BasicWaitStrategies(),
-		postgres.WithInitScripts(s.schemaDir),
+		postgres.WithInitScripts(s.schemaPath),
 		postgres.WithDatabase(util.DbName),
 		postgres.WithUsername(util.DbUser),
 		postgres.WithPassword(util.DbPassword),
@@ -114,6 +116,30 @@ func (s *InputReaderTestSuite) SetupTest() {
 	}
 }
 
+func (s *InputReaderTestSuite) TearDownTest() {
+	s.workerCancel()
+	select {
+	case <-s.ctx.Done():
+		s.Fail("context error", s.ctx.Err())
+	case err := <-s.workerResult:
+		s.NoError(err)
+	}
+	s.timeoutCancel()
+
+	// Stop container
+	testcontainers.CleanupContainer(s.T(), s.image.Container)
+
+	s.appRepository.Db.Close()
+}
+
+func (s *InputReaderTestSuite) TearDownSuite() {
+	// Remove schema
+	parentPath := filepath.Dir(s.schemaPath)
+	s.T().Logf("Removing schema path: %s", parentPath)
+	err := os.RemoveAll(parentPath)
+	s.NoError(err)
+}
+
 func (s *InputReaderTestSuite) TestFindAllInputsByBlockAndTimestampLT() {
 	client, err := ethclient.DialContext(s.ctx, "http://127.0.0.1:8545")
 	s.NoError(err)
@@ -127,10 +153,10 @@ func (s *InputReaderTestSuite) TestFindAllInputsByBlockAndTimestampLT() {
 	l1FinalizedPrevHeight := uint64(1)
 	timestamp := uint64(time.Now().UnixMilli())
 	w := InputReaderWorker{
-		Model:              nil,
-		Provider:           "",
-		InputBoxAddress:    inputBoxAddress,
-		InputBoxBlock:      1,
+		Model:           nil,
+		Provider:        "",
+		InputBoxAddress: inputBoxAddress,
+		InputBoxBlock:   1,
 	}
 
 	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, timestamp, []common.Address{appAddress})
@@ -153,10 +179,10 @@ func (s *InputReaderTestSuite) TestZeroResultsFindAllInputsByBlockAndTimestampLT
 	l1FinalizedPrevHeight := uint64(1)
 	timestamp := uint64(time.Now().UnixMilli())
 	w := InputReaderWorker{
-		Model:              nil,
-		Provider:           "",
-		InputBoxAddress:    inputBoxAddress,
-		InputBoxBlock:      1,
+		Model:           nil,
+		Provider:        "",
+		InputBoxAddress: inputBoxAddress,
+		InputBoxBlock:   1,
 	}
 	// block, err := client.BlockByNumber(ctx, nil)
 	// s.NoError(err)
@@ -166,20 +192,4 @@ func (s *InputReaderTestSuite) TestZeroResultsFindAllInputsByBlockAndTimestampLT
 	s.NoError(err)
 	s.NotNil(inputs)
 	s.Equal(0, len(inputs))
-}
-
-func (s *InputReaderTestSuite) TearDownTest() {
-	s.workerCancel()
-	select {
-	case <-s.ctx.Done():
-		s.Fail("context error", s.ctx.Err())
-	case err := <-s.workerResult:
-		s.NoError(err)
-	}
-	s.timeoutCancel()
-	s.T().Log("teardown ok.")
-}
-
-func TestInputterTestSuite(t *testing.T) {
-	suite.Run(t, &InputReaderTestSuite{})
 }
