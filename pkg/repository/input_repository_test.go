@@ -26,7 +26,7 @@ type InputRepositorySuite struct {
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
 	image           *postgres.PostgresContainer
-	schemaDir       string
+	schemaPath      string
 }
 
 func TestInputRepositorySuite(t *testing.T) {
@@ -37,8 +37,8 @@ func (s *InputRepositorySuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
 	s.NoError(err)
-	s.schemaDir = filepath.Join(tmpDir, "schema.sql")
-	schemaFile, err := os.Create(s.schemaDir)
+	s.schemaPath = filepath.Join(tmpDir, "schema.sql")
+	schemaFile, err := os.Create(s.schemaPath)
 	s.NoError(err)
 	defer schemaFile.Close()
 
@@ -57,7 +57,7 @@ func (s *InputRepositorySuite) SetupTest() {
 	// Database
 	container, err := postgres.Run(s.ctx, commons.DbImage,
 		postgres.BasicWaitStrategies(),
-		postgres.WithInitScripts(s.schemaDir),
+		postgres.WithInitScripts(s.schemaPath),
 		postgres.WithDatabase(commons.DbName),
 		postgres.WithUsername(commons.DbUser),
 		postgres.WithPassword(commons.DbPassword),
@@ -78,8 +78,7 @@ func (s *InputRepositorySuite) SetupTest() {
 }
 
 func (s *InputRepositorySuite) TearDownTest() {
-	err := s.image.Stop(s.ctx, nil)
-	s.NoError(err)
+	testcontainers.CleanupContainer(s.T(), s.image.Container)
 	s.inputRepository.Db.Close()
 	s.ctxCancel()
 }
@@ -353,4 +352,3 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	s.Len(inputs.Rows, 2)
 	s.Equal(int(input1.Index), int(inputs.Rows[0].Index))
 }
-

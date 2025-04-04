@@ -24,7 +24,7 @@ type EpochRepositorySuite struct {
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
 	image           *postgres.PostgresContainer
-	schemaDir       string
+	schemaPath       string
 }
 
 func TestEpochRepository(t *testing.T) {
@@ -35,8 +35,8 @@ func (s *EpochRepositorySuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
 	s.NoError(err)
-	s.schemaDir = filepath.Join(tmpDir, "schema.sql")
-	schemaFile, err := os.Create(s.schemaDir)
+	s.schemaPath = filepath.Join(tmpDir, "schema.sql")
+	schemaFile, err := os.Create(s.schemaPath)
 	s.NoError(err)
 	defer schemaFile.Close()
 
@@ -55,7 +55,7 @@ func (s *EpochRepositorySuite) SetupTest() {
 	// Database
 	container, err := postgres.Run(s.ctx, commons.DbImage,
 		postgres.BasicWaitStrategies(),
-		postgres.WithInitScripts(s.schemaDir),
+		postgres.WithInitScripts(s.schemaPath),
 		postgres.WithDatabase(commons.DbName),
 		postgres.WithUsername(commons.DbUser),
 		postgres.WithPassword(commons.DbPassword),
@@ -73,6 +73,12 @@ func (s *EpochRepositorySuite) SetupTest() {
 	s.NoError(err)
 
 	s.epochRepository = NewEpochRepository(db)
+}
+
+func (s *EpochRepositorySuite) TearDownTest() {
+	testcontainers.CleanupContainer(s.T(), s.image.Container)
+	s.epochRepository.Db.Close()
+	s.ctxCancel()
 }
 
 func (s *EpochRepositorySuite) TestGetLatestOpenEpoch() {
