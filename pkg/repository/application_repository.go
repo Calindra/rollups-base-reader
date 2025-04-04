@@ -49,9 +49,9 @@ func (a *AppRepository) FindOneByContract(
 func (a *AppRepository) FindByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error) {
 	query := `SELECT *
 	FROM application
-	WHERE data_availability = $1`
-
-	args := []any{da[:]}
+	WHERE data_availability = decode($1, 'hex')`
+	daHex := common.Bytes2Hex(da[:])
+	args := []any{daHex}
 	apps := []model.Application{}
 
 	slog.Debug("querying applications with data availability", "query", query, "args", args)
@@ -78,9 +78,10 @@ func (a *AppRepository) UpdateDA(
 	da model.DataAvailabilitySelector,
 ) error {
 	query := `UPDATE application
-	SET data_availability = $1
+	SET data_availability = decode($1, 'hex')
 	WHERE id = $2`
-	args := []any{da[:], applicationId}
+	daHex := common.Bytes2Hex(da[:])
+	args := []any{daHex, applicationId}
 
 	tx, err := commons.NewTx(ctx, a.Db)
 	if err != nil {

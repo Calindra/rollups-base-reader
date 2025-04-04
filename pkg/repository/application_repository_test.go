@@ -118,7 +118,8 @@ func (s *AppRepositorySuite) TestFindOneByContract() {
 func (s *AppRepositorySuite) TestUpdateDAByContract() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()
-	da := model.DataAvailabilitySelector{0x12, 0x34, 0x56, 0x78}
+	secret := []byte("megasecret")[4:]
+	da := model.DataAvailabilitySelector{secret[0], secret[1], secret[2], secret[3]}
 	err := s.appRepository.UpdateDA(ctx, 1, da)
 	s.NoError(err)
 }
