@@ -18,5 +18,6 @@ settings.errcheck.exclude-functions = [
     "(*database/sql.Stmt).Close",
     "(*database/sql.Tx).Rollback",
     "(*database/sql.Rows).Close",
-    "(*github.com/calindra/rollups-base-reader/pkg/contracts.InputBoxInputAddedIterator).Close"
+    "(*github.com/calindra/rollups-base-reader/pkg/contracts.InputBoxInputAddedIterator).Close",
 ]
+exclusions.paths = ["pkg/model/node_models.go"]

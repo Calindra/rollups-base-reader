@@ -2,8 +2,17 @@ package services
 
 import (
 	"github.com/calindra/rollups-base-reader/pkg/model"
+	"github.com/calindra/rollups-base-reader/pkg/repository"
 	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 )
+
+type Convert struct {
+	inputRepository *repository.InputRepository
+}
+
+func NewConvert(inputRepository *repository.InputRepository) *Convert {
+	return &Convert{inputRepository}
+}
 
 func ConvertInputStatus(cInputStatus cModel.CompletionStatus) model.InputCompletionStatus {
 	switch cInputStatus {

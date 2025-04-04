@@ -61,7 +61,7 @@ func DefaultTxOpts(ctx context.Context, client *ethclient.Client) (*bind.Transac
 
 // AddInput sends an input to Ethereum using the devnet sender.
 // This function should be used in the devnet environment.
-func AddInput(ctx context.Context, rpcUrl string, payload []byte) error {
+func AddInput(ctx context.Context, rpcUrl string, payload []byte, applicationAddress string) error {
 	if len(payload) == 0 {
 		return fmt.Errorf("cannot send empty payload")
 	}
@@ -80,8 +80,8 @@ func AddInput(ctx context.Context, rpcUrl string, payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("bind input box: %w", err)
 	}
-	slog.Debug("AddInput", "dapp", ApplicationAddress)
-	tx, err := inputBox.AddInput(txOpts, common.HexToAddress(ApplicationAddress), payload)
+	slog.Debug("AddInput", "dapp", applicationAddress)
+	tx, err := inputBox.AddInput(txOpts, common.HexToAddress(applicationAddress), payload)
 	if err != nil {
 		return fmt.Errorf("add input: %w", err)
 	}

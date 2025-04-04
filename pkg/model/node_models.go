@@ -1,4 +1,3 @@
-// Code generated from GitHub. DO NOT EDIT.
 // Source: https://raw.githubusercontent.com/cartesi/rollups-node/d8063929ef309df6925ff45883cce482ec3d9e18/internal/model/models.go
 
 // (c) Cartesi and individual authors (see AUTHORS)
@@ -17,24 +16,24 @@ import (
 )
 
 type Application struct {
-	ID                   int64                    `sql:"primary_key" json:"-"`
-	Name                 string                   `json:"name"`
-	IApplicationAddress  common.Address           `json:"iapplication_address"`
-	IConsensusAddress    common.Address           `json:"iconsensus_address"`
-	IInputBoxAddress     common.Address           `json:"iinputbox_address"`
-	TemplateHash         common.Hash              `json:"template_hash"`
-	TemplateURI          string                   `json:"-"`
-	EpochLength          uint64                   `json:"epoch_length"`
-	DataAvailability     DataAvailabilitySelector `json:"data_availability"`
-	State                ApplicationState         `json:"state"`
-	Reason               *string                  `json:"reason"`
-	IInputBoxBlock       uint64                   `json:"iinputbox_block"`
-	LastInputCheckBlock  uint64                   `json:"last_input_check_block"`
-	LastOutputCheckBlock uint64                   `json:"last_output_check_block"`
-	ProcessedInputs      uint64                   `json:"processed_inputs"`
-	CreatedAt            time.Time                `json:"created_at"`
-	UpdatedAt            time.Time                `json:"updated_at"`
-	ExecutionParameters  ExecutionParameters      `json:"execution_parameters"`
+	ID                   int64                    `db:"id" json:"-"`
+	Name                 string                   `db:"name" json:"name"`
+	IApplicationAddress  common.Address           `db:"iapplication_address" json:"iapplication_address"`
+	IConsensusAddress    common.Address           `db:"iconsensus_address" json:"iconsensus_address"`
+	IInputBoxAddress     common.Address           `db:"iinputbox_address" json:"iinputbox_address"`
+	TemplateHash         common.Hash              `db:"template_hash" json:"template_hash"`
+	TemplateURI          string                   `db:"template_uri" json:"-"`
+	EpochLength          uint64                   `db:"epoch_length" json:"epoch_length"`
+	DataAvailability     DataAvailabilitySelector `db:"data_availability" json:"data_availability"`
+	State                ApplicationState         `db:"state" json:"state"`
+	Reason               *string                  `db:"reason" json:"reason"`
+	IInputBoxBlock       uint64                   `db:"iinputbox_block" json:"iinputbox_block"`
+	LastInputCheckBlock  uint64                   `db:"last_input_check_block" json:"last_input_check_block"`
+	LastOutputCheckBlock uint64                   `db:"last_output_check_block" json:"last_output_check_block"`
+	ProcessedInputs      uint64                   `db:"processed_inputs" json:"processed_inputs"`
+	CreatedAt            time.Time                `db:"created_at" json:"created_at"`
+	UpdatedAt            time.Time                `db:"updated_at" json:"updated_at"`
+	ExecutionParameters  ExecutionParameters      `db:"execution_parameters" json:"execution_parameters"`
 }
 
 func (a *Application) MarshalJSON() ([]byte, error) {
@@ -106,6 +105,8 @@ type DataAvailabilitySelector [DATA_AVAILABILITY_SELECTOR_SIZE]byte
 var (
 	// ABI encoded "InputBox(address)"
 	DataAvailability_InputBox = DataAvailabilitySelector{0xb1, 0x2c, 0x9e, 0xde}
+	// string: avda
+	DataAvailability_Avail = DataAvailabilitySelector{0x61, 0x76, 0x64, 0x61}
 )
 
 func (d *DataAvailabilitySelector) MarshalJSON() ([]byte, error) {
@@ -193,16 +194,16 @@ type ExecutionParameters struct {
 }
 
 type Epoch struct {
-	ApplicationID        int64        `sql:"primary_key" json:"-"`
-	Index                uint64       `sql:"primary_key" json:"index"`
-	FirstBlock           uint64       `json:"first_block"`
-	LastBlock            uint64       `json:"last_block"`
-	ClaimHash            *common.Hash `json:"claim_hash"`
-	ClaimTransactionHash *common.Hash `json:"claim_transaction_hash"`
-	Status               EpochStatus  `json:"status"`
-	VirtualIndex         uint64       `json:"virtual_index"`
-	CreatedAt            time.Time    `json:"created_at"`
-	UpdatedAt            time.Time    `json:"updated_at"`
+	ApplicationID        int64        `sql:"primary_key" db:"application_id" json:"-"`
+	Index                uint64       `sql:"primary_key" db:"index" json:"index"`
+	FirstBlock           uint64       `db:"first_block" json:"first_block"`
+	LastBlock            uint64       `db:"last_block" json:"last_block"`
+	ClaimHash            *common.Hash `db:"claim_hash" json:"claim_hash"`
+	ClaimTransactionHash *common.Hash `db:"claim_transaction_hash" json:"claim_transaction_hash"`
+	Status               EpochStatus  `db:"status" json:"status"`
+	VirtualIndex         uint64       `db:"virtual_index" json:"virtual_index"`
+	CreatedAt            time.Time    `db:"created_at" json:"created_at"`
+	UpdatedAt            time.Time    `db:"updated_at" json:"updated_at"`
 }
 
 func (e *Epoch) MarshalJSON() ([]byte, error) {
@@ -285,18 +286,18 @@ func (e EpochStatus) String() string {
 }
 
 type Input struct {
-	EpochApplicationID   int64                 `sql:"primary_key" json:"-"`
-	EpochIndex           uint64                `json:"epoch_index"`
-	Index                uint64                `sql:"primary_key" json:"index"`
-	BlockNumber          uint64                `json:"block_number"`
-	RawData              []byte                `json:"raw_data"`
-	Status               InputCompletionStatus `json:"status"`
-	MachineHash          *common.Hash          `json:"machine_hash"`
-	OutputsHash          *common.Hash          `json:"outputs_hash"`
-	TransactionReference common.Hash           `json:"transaction_reference"`
-	SnapshotURI          *string               `json:"-"`
-	CreatedAt            time.Time             `json:"created_at"`
-	UpdatedAt            time.Time             `json:"updated_at"`
+	EpochApplicationID   int64                 `sql:"primary_key" db:"epoch_application_id" json:"-"`
+	EpochIndex           uint64                `db:"epoch_index" json:"epoch_index"`
+	Index                uint64                `sql:"primary_key" db:"index" json:"index"`
+	BlockNumber          uint64                `db:"block_number" json:"block_number"`
+	RawData              []byte                `db:"raw_data" json:"raw_data"`
+	Status               InputCompletionStatus `db:"status" json:"status"`
+	MachineHash          *common.Hash          `db:"machine_hash" json:"machine_hash"`
+	OutputsHash          *common.Hash          `db:"outputs_hash" json:"outputs_hash"`
+	TransactionReference *common.Hash          `db:"transaction_reference" json:"transaction_reference"`
+	SnapshotURI          *string               `db:"snapshot_uri" json:"-"`
+	CreatedAt            time.Time             `db:"created_at" json:"created_at"`
+	UpdatedAt            time.Time             `db:"updated_at" json:"updated_at"`
 }
 
 func (i *Input) MarshalJSON() ([]byte, error) {
@@ -532,4 +533,14 @@ func (e MonitoredEvent) String() string {
 
 func Pointer[T any](v T) *T {
 	return &v
+}
+
+// Extra
+type InputExtra struct {
+	Input
+	BlockTimestamp time.Time
+	AppContract    common.Address
+	MsgSender      common.Address
+	ChainId        uint64
+	PrevRandao     common.Hash
 }

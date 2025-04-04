@@ -51,7 +51,7 @@ func (s *AnvilSuite) TestAnvilWorker() {
 	// send input
 	rpcUrl := fmt.Sprintf("http://127.0.0.1:%v", anvilPort)
 	payload := common.Hex2Bytes("deadbeef")
-	err := AddInput(ctx, rpcUrl, payload)
+	err := AddInput(ctx, rpcUrl, payload, ApplicationAddress)
 	s.NoError(err)
 
 	// read input
