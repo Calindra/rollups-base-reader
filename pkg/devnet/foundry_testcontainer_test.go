@@ -3,6 +3,7 @@ package devnet
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/stretchr/testify/suite"
@@ -16,7 +17,7 @@ type FoundryTestContainerSuite struct {
 	container testcontainers.Container
 }
 
-// const timeout = 5 * time.Minute
+const timeout = 5 * time.Minute
 
 func TestFoundryTestContainerSuite(t *testing.T) {
 	suite.Run(t, new(FoundryTestContainerSuite))
@@ -24,12 +25,11 @@ func TestFoundryTestContainerSuite(t *testing.T) {
 
 func (s *FoundryTestContainerSuite) SetupTest() {
 	s.ctx, s.ctxCancel = context.WithCancel(context.Background())
-	// s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
+	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
 }
 
 func (s *FoundryTestContainerSuite) TearDownTest() {
-	s.NoError(s.container.Stop(s.ctx, nil))
-	// testcontainers.CleanupContainer(s.T(), s.container)
+	testcontainers.CleanupContainer(s.T(), s.container)
 	s.ctxCancel()
 }
 func (s *FoundryTestContainerSuite) TestFoundryContainer() {

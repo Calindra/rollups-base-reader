@@ -88,7 +88,6 @@ func WithFiles(content string) testcontainers.CustomizeRequestOption {
 			},
 		}
 		req.Files = files
-		// req.Cmd = append(req.Cmd, "--load-state=/usr/src/app/anvil_state.json")
 		return nil
 	}
 }
@@ -136,7 +135,7 @@ func RunFoundry(ctx context.Context, img string, opts ...testcontainers.Containe
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        img,
 			ExposedPorts: []string{"8546/tcp"},
-			Cmd: []string{"anvil --host=0.0.0.0 --port=8546"},
+			Cmd:          []string{"anvil --host=0.0.0.0 --port=8546 --load-state=/usr/src/app/anvil_state.json"},
 			WaitingFor: wait.ForAll(
 				wait.ForExposedPort(),
 				wait.ForLog("Listening on 0.0.0.0"),
