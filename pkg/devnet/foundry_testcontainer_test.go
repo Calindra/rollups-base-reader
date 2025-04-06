@@ -3,8 +3,8 @@ package devnet
 import (
 	"context"
 	"testing"
-	"time"
 
+	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 )
@@ -16,14 +16,15 @@ type FoundryTestContainerSuite struct {
 	container testcontainers.Container
 }
 
-const timeout = 5 * time.Minute
+// const timeout = 5 * time.Minute
 
 func TestFoundryTestContainerSuite(t *testing.T) {
 	suite.Run(t, new(FoundryTestContainerSuite))
 }
 
 func (s *FoundryTestContainerSuite) SetupTest() {
-	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
+	s.ctx, s.ctxCancel = context.WithCancel(context.Background())
+	// s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
 }
 
 func (s *FoundryTestContainerSuite) TearDownTest() {
@@ -33,7 +34,7 @@ func (s *FoundryTestContainerSuite) TearDownTest() {
 func (s *FoundryTestContainerSuite) TestFoundryContainer() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()
-	container, err := SetupFoundry(ctx)
+	container, err := SetupFoundryNightly(ctx, testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}))
 	s.container = container
 	s.Require().NoError(err)
 	s.NotNil(container)
