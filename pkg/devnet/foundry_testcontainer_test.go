@@ -28,7 +28,8 @@ func (s *FoundryTestContainerSuite) SetupTest() {
 }
 
 func (s *FoundryTestContainerSuite) TearDownTest() {
-	testcontainers.CleanupContainer(s.T(), s.container)
+	s.NoError(s.container.Stop(s.ctx, nil))
+	// testcontainers.CleanupContainer(s.T(), s.container)
 	s.ctxCancel()
 }
 func (s *FoundryTestContainerSuite) TestFoundryContainer() {

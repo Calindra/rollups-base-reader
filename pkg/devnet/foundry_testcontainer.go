@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	_ "embed"
 
@@ -86,6 +88,7 @@ func WithFiles(content string) testcontainers.CustomizeRequestOption {
 			},
 		}
 		req.Files = files
+		// req.Cmd = append(req.Cmd, "--load-state=/usr/src/app/anvil_state.json")
 		return nil
 	}
 }
@@ -121,30 +124,24 @@ func WithStateContent(content []byte) FoundryOption {
 func RunFoundry(ctx context.Context, img string, opts ...testcontainers.ContainerCustomizer) (*FoundryContainer, error) {
 	var err error
 	// health check
-	// bodyRequest, err := bodyHealthCheck()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// headers := map[string]string{
-	// 	"Content-Type": "application/json",
-	// }
+	bodyRequest, err := bodyHealthCheck()
+	if err != nil {
+		return nil, err
+	}
+	headers := map[string]string{
+		"Content-Type": "application/json",
+	}
 
 	req := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        img,
-			ExposedPorts: []string{"8545/tcp"},
-			Cmd: []string{
-				"anvil",
-				"--host=0.0.0.0",
-				"--port=8545",
-				"--load-state=/usr/src/app/anvil_state.json",
-				"--verbose",
-			},
+			ExposedPorts: []string{"8546/tcp"},
+			Cmd: []string{"anvil --host=0.0.0.0 --port=8546"},
 			WaitingFor: wait.ForAll(
-				// wait.ForLog("Listening on 0.0.0.0"),
 				wait.ForExposedPort(),
-				// wait.ForHTTP("/").WithHeaders(headers).WithMethod(http.MethodPost).WithBody(bodyRequest),
-			),
+				wait.ForLog("Listening on 0.0.0.0"),
+				wait.ForHTTP("/").WithHeaders(headers).WithMethod(http.MethodPost).WithBody(bodyRequest),
+			).WithDeadline(1 * time.Minute).WithStartupTimeoutDefault(30 * time.Second),
 		},
 		Started: true,
 	}
