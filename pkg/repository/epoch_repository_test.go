@@ -92,7 +92,7 @@ func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppID() {
 	s.Error(err)
 }
 
-func (s *EpochRepositorySuite) TestGetLatestOpenEpochByAppId() {
+func (s *EpochRepositorySuite) TestGetLatestOpenEpochByAppID() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
 
