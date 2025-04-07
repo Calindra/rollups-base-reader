@@ -32,7 +32,6 @@ type InputReaderTestSuite struct {
 	appRepository *repository.AppRepository
 	ctx           context.Context
 	timeoutCancel context.CancelFunc
-	// rpcUrl        string
 	schemaPath string
 	postgresC  *postgres.PostgresContainer
 	anvilC     *devnet.FoundryContainer
