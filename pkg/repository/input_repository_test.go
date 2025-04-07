@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
@@ -27,40 +26,23 @@ type InputRepositorySuite struct {
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
 	image           *postgres.PostgresContainer
-	schemaDir       string
+	schemaPath      string
 }
 
-const timeout time.Duration = 5 * time.Minute
-const dbImage = "postgres:17.4-alpine"
-const dbName = "rollups"
-const dbUser = "postgres"
-const dbPassword = "password"
-
-const schema = "https://raw.githubusercontent.com/cartesi/rollups-graphql/8e63682b2e99282cdfee3f13b608d0316c22a484/postgres/raw/rollupsdb-dump-202503191059.sql"
-
-// StdoutLogConsumer is a LogConsumer that prints the log to stdout
-type StdoutLogConsumer struct{}
-
-// Accept prints the log to stdout
-func (lc *StdoutLogConsumer) Accept(l testcontainers.Log) {
-	if l.LogType == testcontainers.StderrLog {
-		slog.Error(string(l.Content))
-		return
-	}
-
-	slog.Debug(string(l.Content))
+func TestInputRepositorySuite(t *testing.T) {
+	suite.Run(t, new(InputRepositorySuite))
 }
 
 func (s *InputRepositorySuite) SetupSuite() {
 	// Fetch schema
 	tmpDir, err := os.MkdirTemp("", "schema")
 	s.NoError(err)
-	s.schemaDir = filepath.Join(tmpDir, "schema.sql")
-	schemaFile, err := os.Create(s.schemaDir)
+	s.schemaPath = filepath.Join(tmpDir, "schema.sql")
+	schemaFile, err := os.Create(s.schemaPath)
 	s.NoError(err)
 	defer schemaFile.Close()
 
-	resp, err := http.Get(schema)
+	resp, err := http.Get(commons.Schema)
 	s.NoError(err)
 	defer resp.Body.Close()
 
@@ -70,16 +52,16 @@ func (s *InputRepositorySuite) SetupSuite() {
 
 func (s *InputRepositorySuite) SetupTest() {
 	commons.ConfigureLog(slog.LevelDebug)
-	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), timeout)
+	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), commons.DefaultTimeout)
 
 	// Database
-	container, err := postgres.Run(s.ctx, dbImage,
+	container, err := postgres.Run(s.ctx, commons.DbImage,
 		postgres.BasicWaitStrategies(),
-		postgres.WithInitScripts(s.schemaDir),
-		postgres.WithDatabase(dbName),
-		postgres.WithUsername(dbUser),
-		postgres.WithPassword(dbPassword),
-		testcontainers.WithLogConsumers(&StdoutLogConsumer{}),
+		postgres.WithInitScripts(s.schemaPath),
+		postgres.WithDatabase(commons.DbName),
+		postgres.WithUsername(commons.DbUser),
+		postgres.WithPassword(commons.DbPassword),
+		testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}),
 	)
 	s.NoError(err)
 	extraArg := "sslmode=disable"
@@ -96,17 +78,16 @@ func (s *InputRepositorySuite) SetupTest() {
 }
 
 func (s *InputRepositorySuite) TearDownTest() {
-	err := s.image.Stop(s.ctx, nil)
-	s.NoError(err)
+	testcontainers.CleanupContainer(s.T(), s.image.Container)
 	s.inputRepository.Db.Close()
 	s.ctxCancel()
 }
 
 func (s *InputRepositorySuite) TestInputRepository() {
 	input := model.Input{
-		EpochApplicationID: 1,   // existing app
-		EpochIndex:         23,  // add to actual epoch
-		Index:              171, // unique index
+		EpochApplicationID: 1,                 // existing app
+		EpochIndex:         commons.OpenEpoch, // add to actual epoch
+		Index:              171,               // unique index
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
 		Status:             model.InputCompletionStatus_Accepted,
@@ -122,7 +103,7 @@ func (s *InputRepositorySuite) TestInputRepository() {
 func (s *InputRepositorySuite) TestInputWrongIndex() {
 	input := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              1,
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
@@ -150,7 +131,7 @@ func (s *InputRepositorySuite) TestInputWrongEpoch() {
 func (s *InputRepositorySuite) TestInputWrongApplication() {
 	input := model.Input{
 		EpochApplicationID: 999, // non-existent application
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data"),
@@ -189,7 +170,7 @@ func (s *InputRepositorySuite) TestCountInputs() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -197,7 +178,7 @@ func (s *InputRepositorySuite) TestCountInputs() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -225,7 +206,7 @@ func (s *InputRepositorySuite) TestCountInputs() {
 	}
 	count, err = s.inputRepository.Count(s.ctx, filter)
 	s.NoError(err)
-	s.Equal(uint64(102), count)
+	s.Equal(uint64(100), count)
 }
 
 func (s *InputRepositorySuite) TestCountWrongStatusInputs() {
@@ -278,7 +259,7 @@ func (s *InputRepositorySuite) TestFindAllInputsCount() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -286,7 +267,7 @@ func (s *InputRepositorySuite) TestFindAllInputsCount() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -307,7 +288,7 @@ func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -315,7 +296,7 @@ func (s *InputRepositorySuite) TestFindAllInputsSpecificField() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -345,7 +326,7 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	// Insert test data
 	input1 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              171,
 		BlockNumber:        0,
 		RawData:            []byte("test data 1"),
@@ -353,7 +334,7 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	}
 	input2 := model.Input{
 		EpochApplicationID: 1,
-		EpochIndex:         23,
+		EpochIndex:         commons.OpenEpoch,
 		Index:              172,
 		BlockNumber:        0,
 		RawData:            []byte("test data 2"),
@@ -369,9 +350,5 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	inputs, err := s.inputRepository.FindAll(s.ctx, nil, &last, nil, nil, nil)
 	s.NoError(err)
 	s.Len(inputs.Rows, 2)
-	s.Equal(input1.Index, inputs.Rows[0].Index)
-}
-
-func TestInputRepositorySuite(t *testing.T) {
-	suite.Run(t, new(InputRepositorySuite))
+	s.Equal(int(input1.Index), int(inputs.Rows[0].Index))
 }
