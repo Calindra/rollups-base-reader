@@ -11,6 +11,7 @@ import (
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
@@ -20,6 +21,7 @@ import (
 
 type EpochRepositorySuite struct {
 	suite.Suite
+	appRepository   *AppRepository
 	epochRepository *EpochRepository
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
@@ -73,6 +75,7 @@ func (s *EpochRepositorySuite) SetupTest() {
 	s.NoError(err)
 
 	s.epochRepository = NewEpochRepository(db)
+	s.appRepository = NewAppRepository(db)
 }
 
 func (s *EpochRepositorySuite) TearDownTest() {
@@ -81,22 +84,26 @@ func (s *EpochRepositorySuite) TearDownTest() {
 	s.ctxCancel()
 }
 
-func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppId() {
+func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppID() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
-	appID := int64(13)
+	appID := int64(999)
 	_, err := s.epochRepository.GetLatestOpenEpochByAppID(ctx, appID)
 	s.Error(err)
 }
-
 
 func (s *EpochRepositorySuite) TestGetLatestOpenEpochByAppId() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
 
-	appID := int64(1)
+	// Get app from address
+	address := common.HexToAddress("0x8e3c7bF65833ccb1755dAB530Ef0405644FE6ae3")
+	app, err := s.appRepository.FindOneByContract(ctx, address)
+	s.NoError(err)
+	s.Require().NotNil(app)
+	s.Equal(int64(1), app.ID)
 
-	epoch, err := s.epochRepository.GetLatestOpenEpochByAppID(ctx, appID)
+	epoch, err := s.epochRepository.GetLatestOpenEpochByAppID(ctx, app.ID)
 	s.NoError(err)
 	s.NotNil(epoch)
 	s.Equal(19, int(epoch.Index))
