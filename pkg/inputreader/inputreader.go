@@ -92,7 +92,6 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 
 	for it.Next() {
 		header, err := client.HeaderByHash(ctx, it.Event.Raw.BlockHash)
-
 		if err != nil {
 			return result, fmt.Errorf("inputreader: failed to get tx header: %w", err)
 		}
@@ -121,12 +120,12 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 
 			input := model.InputExtra{
 				Input: model.Input{
-					Index:                inputIndex,
-					BlockNumber:          header.Number.Uint64(),
-					RawData:              payload,
-					Status:               model.InputCompletionStatus_None,
-					EpochApplicationID:   -1,
-					EpochIndex:           0,
+					Index:              inputIndex,
+					BlockNumber:        header.Number.Uint64(),
+					RawData:            payload,
+					Status:             model.InputCompletionStatus_None,
+					EpochApplicationID: -1,
+					EpochIndex:         0,
 				},
 				BlockTimestamp: unixTimestamp,
 				AppContract:    appContract,
