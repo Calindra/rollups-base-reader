@@ -24,7 +24,7 @@ type EpochRepositorySuite struct {
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
 	image           *postgres.PostgresContainer
-	schemaPath       string
+	schemaPath      string
 }
 
 func TestEpochRepository(t *testing.T) {
@@ -81,11 +81,22 @@ func (s *EpochRepositorySuite) TearDownTest() {
 	s.ctxCancel()
 }
 
-func (s *EpochRepositorySuite) TestGetLatestOpenEpoch() {
+func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppId() {
+	ctx, ctxCancel := context.WithCancel(s.ctx)
+	defer ctxCancel()
+	appID := int64(13)
+	_, err := s.epochRepository.GetLatestOpenEpochByAppID(ctx, appID)
+	s.Error(err)
+}
+
+
+func (s *EpochRepositorySuite) TestGetLatestOpenEpochByAppId() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
 
-	epoch, err := s.epochRepository.GetLatestOpenEpoch(ctx)
+	appID := int64(1)
+
+	epoch, err := s.epochRepository.GetLatestOpenEpochByAppID(ctx, appID)
 	s.NoError(err)
 	s.NotNil(epoch)
 	s.Equal(19, int(epoch.Index))

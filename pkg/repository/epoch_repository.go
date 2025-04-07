@@ -17,14 +17,13 @@ func NewEpochRepository(db *sqlx.DB) *EpochRepository {
 	return &EpochRepository{db}
 }
 
-func (e *EpochRepository) GetLatestOpenEpoch(ctx context.Context) (*model.Epoch, error) {
-	query := `SELECT application_id, index, first_block, last_block, claim_hash,
-                    claim_transaction_hash, status, virtual_index, created_at, updated_at
+func (e *EpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error) {
+	query := `SELECT *
 	FROM epoch
-	WHERE status = $1
+	WHERE status = $1 AND application_id = $2
 	ORDER BY index DESC
 	LIMIT 1`
-	args := []any{model.EpochStatus_Open}
+	args := []any{model.EpochStatus_Open, appID}
 
 	epoch := model.Epoch{}
 
@@ -46,8 +45,7 @@ func (e *EpochRepository) GetLatestOpenEpoch(ctx context.Context) (*model.Epoch,
 
 // FindOne retrieves a specific epoch by its index
 func (e *EpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epoch, error) {
-	query := `SELECT application_id, index, first_block, last_block, claim_hash,
-                    claim_transaction_hash, status, virtual_index, created_at, updated_at
+	query := `SELECT *
 	          FROM epoch
 	          WHERE index = $1`
 	args := []any{index}
@@ -72,4 +70,3 @@ func (e *EpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epo
 
 	return &epoch, nil
 }
-
