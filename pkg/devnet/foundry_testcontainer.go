@@ -134,8 +134,8 @@ func RunFoundry(ctx context.Context, img string, opts ...testcontainers.Containe
 	req := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        img,
-			ExposedPorts: []string{"8546/tcp"},
-			Cmd:          []string{"anvil --host=0.0.0.0 --port=8546 --load-state=/usr/src/app/anvil_state.json"},
+			ExposedPorts: []string{"8545/tcp"},
+			Cmd:          []string{"anvil --host=0.0.0.0 --port=8545 --load-state=/usr/src/app/anvil_state.json"},
 			WaitingFor: wait.ForAll(
 				wait.ForExposedPort(),
 				wait.ForLog("Listening on 0.0.0.0"),
@@ -175,17 +175,16 @@ func RunFoundry(ctx context.Context, img string, opts ...testcontainers.Containe
 	return foundryC, err
 }
 
-func (f *FoundryContainer) URI() (*string, error) {
-	ctx := context.Background()
+func (f *FoundryContainer) URI(ctx context.Context) (string, error) {
 	container := f.Container
 	ip, err := container.Host(ctx)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	port, err := container.MappedPort(ctx, "8545")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	uri := fmt.Sprintf("http://%s:%s", ip, port.Port())
-	return &uri, nil
+	return uri, nil
 }

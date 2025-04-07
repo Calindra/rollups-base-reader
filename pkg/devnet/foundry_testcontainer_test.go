@@ -39,5 +39,5 @@ func (s *FoundryTestContainerSuite) TestFoundryContainer() {
 	s.container = container
 	s.Require().NoError(err)
 	s.NotNil(container)
-	// s.NotEmpty(container.URI)
+	s.NotEmpty(container.URI(ctx))
 }
