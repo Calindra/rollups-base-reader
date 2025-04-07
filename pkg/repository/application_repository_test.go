@@ -128,7 +128,7 @@ func (s *AppRepositorySuite) TestFindByDA() {
 	defer cancel()
 
 	// Call FindByDA with InputBox DA selector
-	apps, err := s.appRepository.FindByDA(ctx, model.DataAvailability_InputBox)
+	apps, err := s.appRepository.FindAllByDA(ctx, model.DataAvailability_InputBox)
 	s.NoError(err)
 
 	// Verify we have application(s) using InputBox DA
@@ -144,7 +144,7 @@ func (s *AppRepositorySuite) TestFindByDA() {
 	customDA := model.DataAvailabilitySelector{0xa1, 0xb2, 0xc3, 0xd4}
 
 	// Query with the custom selector (which likely doesn't exist in the DB)
-	customApps, err := s.appRepository.FindByDA(ctx, customDA)
+	customApps, err := s.appRepository.FindAllByDA(ctx, customDA)
 	s.NoError(err)
 	s.Empty(customApps, "Should not find any application with custom data availability")
 }

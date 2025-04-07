@@ -46,7 +46,7 @@ func (a *AppRepository) FindOneByContract(
 	return &app, nil
 }
 
-func (a *AppRepository) FindByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error) {
+func (a *AppRepository) FindAllByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error) {
 	query := `SELECT *
 	FROM application
 	WHERE data_availability = decode($1, 'hex')`
