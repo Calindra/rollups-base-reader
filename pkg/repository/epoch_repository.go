@@ -9,6 +9,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type EpochRepositoryInterface interface {
+	GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error)
+	FindOne(ctx context.Context, index uint64) (*model.Epoch, error)
+}
+
 type EpochRepository struct {
 	Db *sqlx.DB
 }

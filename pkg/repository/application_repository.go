@@ -11,6 +11,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type AppRepositoryInterface interface {
+	FindOneByContract(ctx context.Context, address common.Address) (*model.Application, error)
+	FindAllByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error)
+	UpdateDA(ctx context.Context, applicationId int64, da model.DataAvailabilitySelector) error
+	List(ctx context.Context) ([]model.Application, error)
+}
+
 type AppRepository struct {
 	Db *sqlx.DB
 }
