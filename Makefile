@@ -7,7 +7,7 @@ build:
 
 .PHONY: test
 test:
-	go test -v --timeout 1m -p 1 ./...
+	go test --timeout 1m -p 1 ./...
 
 .PHONY: lint
 lint:
