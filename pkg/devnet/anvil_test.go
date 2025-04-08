@@ -28,18 +28,21 @@ func (s *AnvilSuite) TearDownTest() {
 	s.ctxCancel()
 }
 
-const testTimeout = 1 * time.Minute
+const testTimeout = 30 * time.Second
 
 func (s *AnvilSuite) TestAnvilWorker() {
 	ctx, timeoutCancel := context.WithCancel(s.ctx)
 	defer timeoutCancel()
+
+	anvilCmd, err := CheckAnvilAndInstall(ctx)
+	s.Require().NoError(err)
 
 	anvilPort := AnvilDefaultPort + 100
 	w := AnvilWorker{
 		Address:  AnvilDefaultAddress,
 		Port:     anvilPort,
 		Verbose:  true,
-		AnvilCmd: "anvil",
+		AnvilCmd: anvilCmd,
 	}
 
 	// start worker in goroutine
@@ -61,7 +64,7 @@ func (s *AnvilSuite) TestAnvilWorker() {
 	// send input
 	rpcUrl := fmt.Sprintf("http://127.0.0.1:%v", anvilPort)
 	payload := common.Hex2Bytes("deadbeef")
-	err := AddInput(ctx, rpcUrl, payload, ApplicationAddress)
+	err = AddInput(ctx, rpcUrl, payload, ApplicationAddress)
 	s.NoError(err)
 
 	// read input
