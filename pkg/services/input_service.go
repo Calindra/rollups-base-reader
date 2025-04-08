@@ -47,7 +47,7 @@ func (s *InputService) CreateInputWithAddress(ctx context.Context, appContract c
 	app, err := s.AppRepository.FindOneByContract(ctx, appContract)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("none app found: %w", err)
+			return fmt.Errorf("no app found: %w", err)
 		}
 
 		return fmt.Errorf("failed to find app: %w", err)
