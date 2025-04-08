@@ -34,43 +34,43 @@ jobs:
       - name: Test
         run: make test
 
-    release-pullrequest:
-      name: Release Pull Request
-      runs-on: ubuntu-latest
-      needs: build
-      if: github.ref == 'refs/heads/main'
-      outputs:
-        TAG_NAME: ${{ steps.get_tag.outputs.tag_name }}
-        PUBLISHED: ${{ steps.changeset.outputs.published }}
-      steps:
-        - name: Checkout Repo
-          uses: actions/checkout@v4
-          with:
-              fetch-depth: 0
+  release-pullrequest:
+    name: Release Pull Request
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      TAG_NAME: ${{ steps.get_tag.outputs.tag_name }}
+      PUBLISHED: ${{ steps.changeset.outputs.published }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
 
-        - uses: pnpm/action-setup@v4
-        - name: Setup Node.js 22
-          uses: actions/setup-node@v4
-          with:
-              node-version: 22
-              cache: "pnpm"
+      - uses: pnpm/action-setup@v4
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+            node-version: 22
+            cache: "pnpm"
 
-        - name: Install Dependencies
-          run: pnpm install
+      - name: Install Dependencies
+        run: pnpm install
 
-        - name: Create Release Pull Request
-          id: changeset
-          uses: changesets/action@v1
-          with:
-              commit: "release: version packages"
-              publish: pnpm run publish-packages
-          env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release Pull Request
+        id: changeset
+        uses: changesets/action@v1
+        with:
+            commit: "release: version packages"
+            publish: pnpm run publish-packages
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        - name: Get latest tag name
-          id: get_tag
-          run: |
-            git fetch --tag
-            TAG_NAME=$(git describe --tags `git rev-list --tags --max-count=1`)
-            echo "tag_name=${TAG_NAME}" >> $GITHUB_ENV
-            echo "::set-output name=tag_name::${TAG_NAME}"
+      - name: Get latest tag name
+        id: get_tag
+        run: |
+          git fetch --tag
+          TAG_NAME=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_ENV
+          echo "::set-output name=tag_name::${TAG_NAME}"
