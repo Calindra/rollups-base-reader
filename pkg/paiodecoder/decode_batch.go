@@ -13,7 +13,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/cartesi/rollups-graphql/pkg/commons"
+	"github.com/calindra/rollups-base-reader/pkg/devnet"
 	"github.com/google/go-github/github"
 )
 
@@ -23,7 +23,7 @@ const (
 
 func IsDecodeBatchInstalled() (string, bool) {
 	filename := DEFAULT_NAME_PROGRAM
-	if runtime.GOOS == commons.WINDOWS {
+	if runtime.GOOS == devnet.WINDOWS {
 		filename = filename + ".exe"
 	}
 	location := filepath.Join(os.TempDir(), filename)
@@ -32,11 +32,11 @@ func IsDecodeBatchInstalled() (string, bool) {
 }
 
 type PaioConfig struct {
-	AssetPaio   commons.ReleaseAsset `json:"asset_paio"`
+	AssetPaio   devnet.ReleaseAsset `json:"asset_paio"`
 	LatestCheck string               `json:"latest_check"`
 }
 
-func NewPaioConfig(ra commons.ReleaseAsset) *PaioConfig {
+func NewPaioConfig(ra devnet.ReleaseAsset) *PaioConfig {
 	return &PaioConfig{
 		AssetPaio:   ra,
 		LatestCheck: time.Now().Format(time.RFC3339),
@@ -105,7 +105,12 @@ type PaioReleaseHandler struct {
 	Client         *github.Client
 }
 
-func NewPaioReleaseHandler() commons.HandleRelease {
+// GetVersion implements devnet.HandleRelease.
+func (p PaioReleaseHandler) GetVersion(ctx context.Context) (string, error) {
+	panic("unimplemented")
+}
+
+func NewPaioReleaseHandler() devnet.HandleRelease {
 	return PaioReleaseHandler{
 		// Change for Cartesi when available
 		Namespace:      "cartesi",
@@ -116,7 +121,7 @@ func NewPaioReleaseHandler() commons.HandleRelease {
 }
 
 // DownloadAsset implements commons.HandleRelease.
-func (d PaioReleaseHandler) DownloadAsset(ctx context.Context, release *commons.ReleaseAsset) (string, error) {
+func (d PaioReleaseHandler) DownloadAsset(ctx context.Context, release *devnet.ReleaseAsset) (string, error) {
 	folder := d.Repository + "-" + release.Tag
 	root := filepath.Join(os.TempDir(), folder)
 	perm := 0755 | os.ModeDir
@@ -126,7 +131,7 @@ func (d PaioReleaseHandler) DownloadAsset(ctx context.Context, release *commons.
 	}
 
 	filename := "decode-batch"
-	if runtime.GOOS == commons.WINDOWS {
+	if runtime.GOOS == devnet.WINDOWS {
 		filename = "decode-batch.exe"
 	}
 
@@ -193,7 +198,7 @@ func (d PaioReleaseHandler) FormatNameRelease(prefix string, goos string, goarch
 	myos := goos
 	myarch := goarch
 
-	if goos == commons.WINDOWS {
+	if goos == devnet.WINDOWS {
 		ext = ".exe"
 		myos = "windows-msvc"
 	}
@@ -210,7 +215,7 @@ func (d PaioReleaseHandler) FormatNameRelease(prefix string, goos string, goarch
 		myarch = "aarch64"
 	}
 
-	if goarch == commons.X86_64 {
+	if goarch == devnet.X86_64 {
 		myarch = "x86_64"
 	}
 
@@ -218,7 +223,7 @@ func (d PaioReleaseHandler) FormatNameRelease(prefix string, goos string, goarch
 }
 
 // GetLatestReleaseCompatible implements commons.HandleRelease.
-func (p PaioReleaseHandler) GetLatestReleaseCompatible(ctx context.Context) (*commons.ReleaseAsset, error) {
+func (p PaioReleaseHandler) GetLatestReleaseCompatible(ctx context.Context) (*devnet.ReleaseAsset, error) {
 	platform, err := p.PlatformCompatible()
 	if err != nil {
 		return nil, err
@@ -234,7 +239,7 @@ func (p PaioReleaseHandler) GetLatestReleaseCompatible(ctx context.Context) (*co
 
 	slog.Debug("using", "tag", paioTag, "fromEnv", fromEnv)
 
-	var target *commons.ReleaseAsset = nil
+	var target *devnet.ReleaseAsset = nil
 
 	// Get release asset from config
 	if config != nil {
@@ -252,7 +257,7 @@ func (p PaioReleaseHandler) GetLatestReleaseCompatible(ctx context.Context) (*co
 		}
 	}
 
-	assets, err := commons.GetAssetsFromLastReleaseGitHub(ctx, p.Client, p.Namespace, p.Repository, paioTag)
+	assets, err := devnet.GetAssetsFromLastReleaseGitHub(ctx, p.Client, p.Namespace, p.Repository, paioTag)
 	if err != nil {
 		return nil, err
 	}
@@ -285,8 +290,8 @@ func (p PaioReleaseHandler) GetLatestReleaseCompatible(ctx context.Context) (*co
 }
 
 // ListRelease implements commons.HandleRelease.
-func (d PaioReleaseHandler) ListRelease(ctx context.Context) ([]commons.ReleaseAsset, error) {
-	return commons.GetAssetsFromLastReleaseGitHub(ctx, d.Client, d.Namespace, d.Repository, "")
+func (d PaioReleaseHandler) ListRelease(ctx context.Context) ([]devnet.ReleaseAsset, error) {
+	return devnet.GetAssetsFromLastReleaseGitHub(ctx, d.Client, d.Namespace, d.Repository, "")
 }
 
 // PlatformCompatible implements commons.HandleRelease.
@@ -296,8 +301,8 @@ func (d PaioReleaseHandler) PlatformCompatible() (string, error) {
 	goarch := runtime.GOARCH
 	goos := runtime.GOOS
 
-	if ((goarch == commons.X86_64) && (goos == commons.WINDOWS || goos == "linux")) ||
-		((goarch == commons.X86_64 || goarch == "arm64") && goos == "darwin") {
+	if ((goarch == devnet.X86_64) && (goos == devnet.WINDOWS || goos == "linux")) ||
+		((goarch == devnet.X86_64 || goarch == "arm64") && goos == "darwin") {
 		return d.FormatNameRelease("", goos, goarch, ""), nil
 	}
 
@@ -315,7 +320,7 @@ func DownloadPaioDecoderExecutableAsNeeded() (string, error) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		paioReleaseHandler := NewPaioReleaseHandler()
-		location, err := commons.HandleReleaseExecution(ctx, paioReleaseHandler)
+		location, err := devnet.HandleReleaseExecution(ctx, paioReleaseHandler)
 		if err != nil {
 			slog.Error("error downloading paio batch decoder executable")
 			return "", err

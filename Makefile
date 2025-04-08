@@ -6,6 +6,9 @@ build:
 	go build ./...
 
 .PHONY: test
+test-ci:
+	go test -v --timeout 1m -p 1 ./...
+
 test:
 	go test --timeout 1m -p 1 ./...
 
