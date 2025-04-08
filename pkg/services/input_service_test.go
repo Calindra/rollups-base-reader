@@ -144,7 +144,7 @@ func (is *InputServiceTestSuite) TestCreateInputID() {
 	is.mockEpochRepo.On("GetLatestOpenEpochByAppID", appID).Return(mockEpoch, nil)
 	is.mockInputRepo.On("Create", updatedInput).Return(nil)
 
-	err := is.service.CreateInputID(ctx, appID, input)
+	err := is.service.CreateInput(ctx,  input)
 
 	is.NoError(err)
 	is.mockEpochRepo.AssertCalled(is.T(), "GetLatestOpenEpochByAppID", appID)

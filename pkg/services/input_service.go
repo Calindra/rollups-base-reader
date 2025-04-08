@@ -24,7 +24,9 @@ func NewInputService(inputRepository repository.InputRepositoryInterface, epochR
 		AppRepository:   appRepository,
 	}
 }
-func (s *InputService) CreateInputID(ctx context.Context, appID int64, input model.Input) error {
+func (s *InputService) CreateInput(ctx context.Context, input model.Input) error {
+	appID := input.EpochApplicationID
+
 	// Get the latest open epoch for the app
 	latestEpoch, err := s.EpochRepository.GetLatestOpenEpochByAppID(ctx, appID)
 	if err != nil {
@@ -55,5 +57,5 @@ func (s *InputService) CreateInputWithAddress(ctx context.Context, appContract c
 
 	input.EpochApplicationID = app.ID
 
-	return s.CreateInputID(ctx, app.ID, input)
+	return s.CreateInput(ctx, input)
 }
