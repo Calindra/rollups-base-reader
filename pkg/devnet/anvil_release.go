@@ -43,6 +43,7 @@ type HandleRelease interface {
 	DownloadAsset(ctx context.Context, release *ReleaseAsset) (string, error)
 	// Extract the asset from the archive
 	ExtractAsset(archive []byte, filename string, destDir string) error
+	GetVersion(ctx context.Context) (string, error)
 }
 
 // Anvil implementation from HandleRelease
@@ -51,6 +52,18 @@ type AnvilRelease struct {
 	Repository     string
 	ConfigFilename string
 	Client         *github.Client
+}
+
+// GetVersion implements HandleRelease.
+func (a *AnvilRelease) GetVersion(ctx context.Context) (string, error) {
+	// lookup for the anvil version on environment or default as nightly
+	// Same behavior of Foundryup
+	anvilTag := LATEST_TAG
+	tag, ok := os.LookupEnv("ANVIL_TAG")
+	if ok {
+		anvilTag = tag
+	}
+	return anvilTag, nil
 }
 
 // Prerequisites implements HandleRelease.
@@ -293,13 +306,12 @@ func (a *AnvilRelease) GetLatestReleaseCompatible(ctx context.Context) (*Release
 		return nil, err
 	}
 
-	anvilTag, fromEnv := os.LookupEnv("ANVIL_TAG")
-
-	if !fromEnv {
-		// Same behavior of Foundryup
-		anvilTag = LATEST_TAG
+	anvilTag, err := a.GetVersion(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("anvil: failed to get version %s", err.Error())
 	}
-	slog.Debug("anvil: using", "tag", anvilTag, "fromEnv", fromEnv)
+
+	slog.Debug("anvil: using", "tag", anvilTag)
 
 	if anvilTag == LATEST_TAG {
 		slog.Debug("anvil: request is nightly, download new..")
