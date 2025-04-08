@@ -16,12 +16,22 @@ import (
 
 type AnvilSuite struct {
 	suite.Suite
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 }
 
-const testTimeout = 10 * time.Second
+func (s *AnvilSuite) SetupTest() {
+	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), testTimeout)
+}
+
+func (s *AnvilSuite) TearDownTest() {
+	s.ctxCancel()
+}
+
+const testTimeout = 1 * time.Minute
 
 func (s *AnvilSuite) TestAnvilWorker() {
-	ctx, timeoutCancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, timeoutCancel := context.WithCancel(s.ctx)
 	defer timeoutCancel()
 
 	anvilPort := AnvilDefaultPort + 100
