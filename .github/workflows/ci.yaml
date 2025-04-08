@@ -32,7 +32,7 @@ jobs:
         run: make build
 
       - name: Test
-        run: make test
+        run: make test-ci
 
   release-pullrequest:
     name: Release Pull Request
