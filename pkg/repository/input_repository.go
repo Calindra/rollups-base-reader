@@ -14,6 +14,20 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type InputRepositoryInterface interface {
+	Create(ctx context.Context, input model.Input) error
+	FindOne(ctx context.Context, applicationId int64, index uint64) (*model.Input, error)
+	FindAll(
+		ctx context.Context,
+		first *int,
+		last *int,
+		after *string,
+		before *string,
+		filter []*cModel.ConvenienceFilter,
+	) (*commons.PageResult[model.Input], error)
+	Count(ctx context.Context, filter []*cModel.ConvenienceFilter) (uint64, error)
+}
+
 type InputRepository struct {
 	Db *sqlx.DB
 }
