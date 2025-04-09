@@ -538,9 +538,11 @@ func Pointer[T any](v T) *T {
 // Extra
 type InputExtra struct {
 	Input
-	BlockTimestamp time.Time
-	AppContract    common.Address
-	MsgSender      common.Address
-	ChainId        uint64
-	PrevRandao     common.Hash
+	BlockTimestamp  time.Time
+	AppContract     common.Address
+	MsgSender       common.Address
+	ChainId         uint64
+	PrevRandao      common.Hash
+	Transaction     string
+	TransactionData []byte
 }
