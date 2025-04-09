@@ -98,6 +98,7 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 		timestamp := uint64(header.Time)
 		unixTimestamp := time.Unix(int64(header.Time), 0)
 		if timestamp < endTimestamp {
+			rawData := it.Event.Input
 			eventInput := it.Event.Input[4:]
 			abi, err := contracts.InputsMetaData.GetAbi()
 			if err != nil {
@@ -122,16 +123,17 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 				Input: model.Input{
 					Index:              inputIndex,
 					BlockNumber:        header.Number.Uint64(),
-					RawData:            payload,
+					RawData:            rawData,
 					Status:             model.InputCompletionStatus_None,
 					EpochApplicationID: -1,
 					EpochIndex:         0,
 				},
-				BlockTimestamp: unixTimestamp,
-				AppContract:    appContract,
-				MsgSender:      msgSender,
-				ChainId:        chainId,
-				PrevRandao:     prevRandao,
+				BlockTimestamp:  unixTimestamp,
+				AppContract:     appContract,
+				MsgSender:       msgSender,
+				ChainId:         chainId,
+				PrevRandao:      prevRandao,
+				TransactionData: payload,
 			}
 			slog.Debug("append InputAdded", "timestamp", timestamp, "endTimestamp", endTimestamp)
 			result = append(result, input)
