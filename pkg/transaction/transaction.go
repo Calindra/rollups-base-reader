@@ -1,5 +1,7 @@
 package transaction
 
+//go:generate go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config=oapi.yaml oapi-transaction.yaml
+
 import (
 	"context"
 	"encoding/base64"
@@ -16,6 +18,18 @@ import (
 
 type TransactionAPI struct {
 	ClientSender Sender
+}
+
+var _ ServerInterface = (*TransactionAPI)(nil)
+
+// SaveTransaction implements ServerInterface.
+func (p *TransactionAPI) SaveTransaction(ctx echo.Context) error {
+	panic("unimplemented")
+}
+
+// SendTransaction implements ServerInterface.
+func (p *TransactionAPI) SendTransaction(ctx echo.Context) error {
+	panic("unimplemented")
 }
 
 // SendCartesiTransaction implements ServerInterface.
