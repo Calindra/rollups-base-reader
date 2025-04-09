@@ -4,12 +4,7 @@
 package main
 
 import (
-	_ "embed"
-
 	_ "github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"
 )
 
 //go:generate go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen -config=oapi.yaml ./oapi-transaction.yaml
-
-//go:embed paio.json
-var DEFINITION string

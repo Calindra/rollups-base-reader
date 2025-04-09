@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/cartesi/rollups-graphql/pkg/commons"
+	"github.com/calindra/rollups-base-reader/pkg/eip712"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/labstack/echo/v4"
@@ -20,6 +20,8 @@ type TransactionAPI struct {
 
 // SendCartesiTransaction implements ServerInterface.
 func (p *TransactionAPI) SendCartesiTransaction(ctx echo.Context) error {
+	stdCtx, cancel := context.WithCancel(ctx.Request().Context())
+	defer cancel()
 	var request SendCartesiTransactionJSONRequestBody
 	if err := ctx.Bind(&request); err != nil {
 		return err
@@ -28,7 +30,7 @@ func (p *TransactionAPI) SendCartesiTransaction(ctx echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("error marshalling typed data: %w", err)
 	}
-	sigAndData := commons.SigAndData{
+	sigAndData := eip712.SigAndData{
 		Signature: *request.Signature,
 		TypedData: base64.StdEncoding.EncodeToString(typeJSON),
 	}
@@ -38,7 +40,7 @@ func (p *TransactionAPI) SendCartesiTransaction(ctx echo.Context) error {
 		return err
 	}
 	slog.Debug("/submit", "jsonPayload", string(jsonPayload))
-	msgSender, _, signature, err := commons.ExtractSigAndData(string(jsonPayload))
+	msgSender, _, signature, err := eip712.ExtractSigAndData(string(jsonPayload))
 	if err != nil {
 		slog.Error("Error ExtractSigAndData message:", "err", err)
 		return err
@@ -55,7 +57,7 @@ func (p *TransactionAPI) SendCartesiTransaction(ctx echo.Context) error {
 	)
 	txId := fmt.Sprintf("0x%s", common.Bytes2Hex(crypto.Keccak256(signature)))
 
-	seqTxId, err := p.ClientSender.SubmitSigAndData(sigAndData)
+	seqTxId, err := p.ClientSender.SubmitSigAndData(stdCtx, sigAndData)
 	if err != nil {
 		return err
 	}
@@ -82,7 +84,7 @@ func (p *TransactionAPI) GetNonce(ctx echo.Context) error {
 
 	slog.Debug("GetNonce", "AppContract", request.AppContract, "MsgSender", request.MsgSender)
 
-	total, err := p.inputRepository.GetNonce(stdCtx, appContract, msgSender)
+	total, err := p.ClientSender.GetNonce(stdCtx, appContract, msgSender)
 	if err != nil {
 		slog.Error("Error querying for inputs:", "err", err)
 		return err
