@@ -26,6 +26,7 @@ type InputRepositoryInterface interface {
 		filter []*cModel.ConvenienceFilter,
 	) (*commons.PageResult[model.Input], error)
 	Count(ctx context.Context, filter []*cModel.ConvenienceFilter) (uint64, error)
+	CountMap(ctx context.Context) (map[int64]uint64, error)
 }
 
 type InputRepository struct {
