@@ -92,6 +92,38 @@ func transformToInputQuery(
 	return query, args, count, nil
 }
 
+
+func (i *InputRepository) CountMap(ctx context.Context) (map[int64]uint64, error) {
+	mapAddress := make(map[int64]uint64)
+
+	type InputCount struct {
+		AppID int64 `db:"epoch_application_id"`
+		Count uint64 `db:"counter"`
+	}
+
+	inputCounter := []InputCount{}
+
+	query := `SELECT epoch_application_id, count(*) as counter FROM input GROUP BY epoch_application_id`
+	stmt, err := i.Db.PreparexContext(ctx, query)
+	if err != nil {
+		slog.Error("CountMap prepare error")
+		return nil, err
+	}
+	defer stmt.Close()
+
+	err = stmt.SelectContext(ctx, &inputCounter)
+	if err != nil {
+		slog.Error("CountMap execution error")
+		return nil, err
+	}
+
+	for _, input := range inputCounter {
+		mapAddress[input.AppID] = input.Count
+	}
+
+	return mapAddress, nil
+}
+
 func (i *InputRepository) Count(
 	ctx context.Context,
 	filter []*cModel.ConvenienceFilter,

@@ -352,3 +352,36 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	s.Len(inputs.Rows, 2)
 	s.Equal(int(input1.Index), int(inputs.Rows[0].Index))
 }
+
+
+func (s *InputRepositorySuite) TestCountMap() {
+	ctx, ctxCancel := context.WithCancel(s.ctx)
+	defer ctxCancel()
+	// Insert test data
+	input1 := model.Input{
+		EpochApplicationID: 1,
+		EpochIndex:         commons.OpenEpoch,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data 1"),
+		Status:             model.InputCompletionStatus_Accepted,
+	}
+	input2 := model.Input{
+		EpochApplicationID: 1,
+		EpochIndex:         commons.OpenEpoch,
+		Index:              172,
+		BlockNumber:        0,
+		RawData:            []byte("test data 2"),
+		Status:             model.InputCompletionStatus_Rejected,
+	}
+	err := s.inputRepository.Create(s.ctx, input1)
+	s.NoError(err)
+	err = s.inputRepository.Create(s.ctx, input2)
+	s.NoError(err)
+
+
+	dataMap, err := s.inputRepository.CountMap(ctx)
+	s.NoError(err)
+	s.Len(dataMap, 1)
+	s.Equal(103, int(dataMap[1]))
+}
