@@ -57,6 +57,11 @@ func run(name string, args ...string) {
 
 func main() {
 	commons.ConfigureLog(slog.LevelDebug)
+
+	// kill previous container
+	run("docker", "kill", "temp-devnet:devrel")
+	run("docker", "rm", "temp-devnet:devrel")
+
 	// you can see the tags on
 	// https://github.com/cartesi/cli/pkgs/container/sdk
 	// update me when the image is updated
@@ -83,5 +88,5 @@ func main() {
 		slog.Info("Finished copying the state file")
 	}()
 	run("docker", "cp", "temp-devnet:/usr/share/cartesi/anvil_state.json", ".")
-	run("docker", "cp", "temp-devnet:/usr/share/cartesi/localhost.json", ".")
+	// run("docker", "cp", "temp-devnet:/usr/share/cartesi/localhost.json", ".")
 }
