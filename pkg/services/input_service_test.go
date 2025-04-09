@@ -20,6 +20,11 @@ type MockInputRepository struct {
 	mock.Mock
 }
 
+// CountMap implements repository.InputRepositoryInterface.
+func (m *MockInputRepository) CountMap(ctx context.Context) (map[int64]uint64, error) {
+	panic("unimplemented")
+}
+
 // Count implements repository.InputRepositoryInterface.
 func (m *MockInputRepository) Count(ctx context.Context, filter []*cModel.ConvenienceFilter) (uint64, error) {
 	panic("unimplemented")
@@ -144,7 +149,7 @@ func (is *InputServiceTestSuite) TestCreateInputID() {
 	is.mockEpochRepo.On("GetLatestOpenEpochByAppID", appID).Return(mockEpoch, nil)
 	is.mockInputRepo.On("Create", updatedInput).Return(nil)
 
-	err := is.service.CreateInput(ctx,  input)
+	err := is.service.CreateInput(ctx, input)
 
 	is.NoError(err)
 	is.mockEpochRepo.AssertCalled(is.T(), "GetLatestOpenEpochByAppID", appID)
