@@ -22,16 +22,6 @@ type TransactionAPI struct {
 
 var _ ServerInterface = (*TransactionAPI)(nil)
 
-// SaveTransaction implements ServerInterface.
-func (p *TransactionAPI) SaveTransaction(ctx echo.Context) error {
-	panic("unimplemented")
-}
-
-// SendTransaction implements ServerInterface.
-func (p *TransactionAPI) SendTransaction(ctx echo.Context) error {
-	panic("unimplemented")
-}
-
 // SendCartesiTransaction implements ServerInterface.
 func (p *TransactionAPI) SendCartesiTransaction(ctx echo.Context) error {
 	stdCtx, cancel := context.WithCancel(ctx.Request().Context())
