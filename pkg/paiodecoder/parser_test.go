@@ -63,7 +63,9 @@ func (s *ParserSuite) TestParsePaioBatchToInputs() {
 	s.NoError(err)
 	s.Len(inputs, 1)
 
-	s.Equal("Hello, World?", string(inputs[0].RawData))
+	slog.Debug("inputs", "inputs", inputs)
+
+	s.Equal("Hello, World?", string(inputs[0].TransactionData))
 }
 
 func (s *ParserSuite) TestParsePaioBatchToInputsWeirdSignature() {
@@ -91,5 +93,5 @@ func (s *ParserSuite) TestParsePaioBatchToInputsWeirdSignature() {
 	s.NoError(err)
 	s.Len(inputs, 1)
 
-	s.Equal("deadbeefa7", common.Bytes2Hex(inputs[0].RawData))
+	s.Equal("deadbeefa7", common.Bytes2Hex(inputs[0].TransactionData))
 }
