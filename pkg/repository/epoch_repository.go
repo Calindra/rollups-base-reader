@@ -12,6 +12,7 @@ import (
 type EpochRepositoryInterface interface {
 	GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error)
 	FindOne(ctx context.Context, index uint64) (*model.Epoch, error)
+	Create(ctx context.Context, epoch *model.Epoch) error
 }
 
 type EpochRepository struct {
@@ -50,6 +51,9 @@ func (e *EpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, appID i
 
 	// Execute the query
 	err = stmt.GetContext(ctx, &epoch, args...)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -92,4 +96,53 @@ func (e *EpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epo
 	}
 
 	return &epoch, nil
+}
+
+func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
+	query := `
+		INSERT INTO epoch (
+			application_id,
+			index,
+			first_block,
+			last_block,
+			claim_hash,
+			claim_transaction_hash,
+			status,
+			virtual_index
+		) VALUES (
+			:application_id,
+			:index,
+			:first_block,
+			:last_block,
+			:claim_hash,
+			:claim_transaction_hash,
+			:status,
+			:virtual_index
+		)
+		RETURNING 
+			application_id,
+			index,
+			first_block,
+			last_block,
+			claim_hash,
+			claim_transaction_hash,
+			status,
+			virtual_index,
+			created_at,
+			updated_at
+	`
+
+	stmt, err := e.Db.PrepareNamedContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var inserted model.Epoch
+	err = stmt.GetContext(ctx, &inserted, epoch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &inserted, nil
 }

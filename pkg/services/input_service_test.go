@@ -53,6 +53,11 @@ type MockEpochRepository struct {
 	mock.Mock
 }
 
+// Create implements repository.EpochRepositoryInterface.
+func (m *MockEpochRepository) Create(ctx context.Context, epoch *model.Epoch) error {
+	panic("unimplemented")
+}
+
 // FindOne implements repository.EpochRepositoryInterface.
 func (m *MockEpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epoch, error) {
 	panic("unimplemented")
@@ -69,6 +74,11 @@ func (m *MockEpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, app
 
 type MockAppRepository struct {
 	mock.Mock
+}
+
+// FindOneByID implements repository.AppRepositoryInterface.
+func (m *MockAppRepository) FindOneByID(ctx context.Context, id int64) (*model.Application, error) {
+	panic("unimplemented")
 }
 
 // FindAllByDA implements repository.AppRepositoryInterface.

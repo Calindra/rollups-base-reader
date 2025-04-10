@@ -33,6 +33,22 @@ func (s *InputService) CreateInput(ctx context.Context, input model.Input) error
 		return fmt.Errorf("failed to find latest epoch for appID %d: %w", appID, err)
 	}
 
+	if latestEpoch == nil {
+		app, err := s.AppRepository.FindOneByID(ctx, appID)
+		if err != nil {
+			return fmt.Errorf("failed to find the app %d: %w", appID, err)
+		}
+		epoch := model.Epoch{
+			ApplicationID: appID,
+			Index:         0,
+			FirstBlock:    input.BlockNumber,
+			LastBlock:     input.BlockNumber + app.EpochLength,
+			Status:        model.EpochStatus_Open,
+			VirtualIndex:  0,
+		}
+		s.EpochRepository.Create(ctx, &epoch)
+	}
+
 	// Set correct epoch index
 	input.EpochIndex = latestEpoch.Index
 
