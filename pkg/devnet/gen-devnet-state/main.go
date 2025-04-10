@@ -10,8 +10,6 @@ import (
 	"bufio"
 	"log/slog"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 )
@@ -37,14 +35,14 @@ func run(name string, args ...string) {
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
-			slog.Debug("[STDOUT]", "obtained", scanner.Text())
+			slog.Debug("[DOCKER]", "line", scanner.Text())
 		}
 	}()
 
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			slog.Debug("[STDERR]", "obtained", scanner.Text())
+			slog.Debug("[DOCKER]", "line", scanner.Text())
 		}
 	}()
 
@@ -55,12 +53,22 @@ func run(name string, args ...string) {
 	slog.Debug("Command finished", "name", name, "args", args)
 }
 
+// containerExists checks if a Docker container exists
+func containerExists(containerName string) bool {
+	cmd := exec.Command("docker", "container", "inspect", containerName)
+	err := cmd.Run()
+	// If the command returns an error, the container doesn't exist
+	return err == nil
+}
+
 func main() {
 	commons.ConfigureLog(slog.LevelDebug)
 
-	// kill previous container
-	run("docker", "kill", "temp-devnet:devrel")
-	run("docker", "rm", "temp-devnet:devrel")
+	// Remove previous container only if it exists
+	if containerExists("temp-devnet") {
+		slog.Info("Removing existing temp-devnet container")
+		run("docker", "rm", "temp-devnet")
+	}
 
 	// you can see the tags on
 	// https://github.com/cartesi/cli/pkgs/container/sdk
@@ -68,23 +76,23 @@ func main() {
 	slog.Info("Creating temporary container")
 
 	// like __filename
-	_, xdir, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("no found dirname")
-	}
+	// _, xdir, _, ok := runtime.Caller(0)
+	// if !ok {
+	// 	panic("no found dirname")
+	// }
 
 	// Custom Docker anvil state
-	dockerfile := filepath.Join(filepath.Dir(xdir), "Dockerfile.sdk")
-	run("docker", "build", "-t", "temp-devnet:devrel", ".", "-f", dockerfile)
-	run("docker", "create", "--name", "temp-devnet", "temp-devnet:devrel")
+	// dockerfile := filepath.Join(filepath.Dir(xdir), "Dockerfile.sdk")
+	// run("docker", "build", "-t", "temp-devnet:devrel", ".", "-f", dockerfile)
+	// run("docker", "create", "--name", "temp-devnet", "temp-devnet:devrel")
 
 	// Production ready anvil state
-	// run("docker", "create", "--name", "temp-devnet", "ghcr.io/cartesi/sdk:0.11.0")
+	run("docker", "create", "--name", "temp-devnet", "ghcr.io/cartesi/sdk:0.12.0-alpha.14")
 
 	slog.Info("Copying the state file")
 	defer func() {
-		// run("docker", "rm", "temp-devnet")
-		run("docker", "rmi", "temp-devnet:devrel")
+		run("docker", "rm", "temp-devnet")
+		// run("docker", "rmi", "temp-devnet:devrel")
 		slog.Info("Finished copying the state file")
 	}()
 	run("docker", "cp", "temp-devnet:/usr/share/cartesi/anvil_state.json", ".")
