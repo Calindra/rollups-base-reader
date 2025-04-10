@@ -54,7 +54,7 @@ type MockEpochRepository struct {
 }
 
 // Create implements repository.EpochRepositoryInterface.
-func (m *MockEpochRepository) Create(ctx context.Context, epoch *model.Epoch) error {
+func (m *MockEpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
 	panic("unimplemented")
 }
 

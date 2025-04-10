@@ -12,7 +12,7 @@ import (
 type EpochRepositoryInterface interface {
 	GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error)
 	FindOne(ctx context.Context, index uint64) (*model.Epoch, error)
-	Create(ctx context.Context, epoch *model.Epoch) error
+	Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error)
 }
 
 type EpochRepository struct {
