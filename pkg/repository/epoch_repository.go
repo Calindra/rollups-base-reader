@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	util "github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -13,6 +14,7 @@ import (
 type EpochRepositoryInterface interface {
 	GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error)
 	FindOne(ctx context.Context, index uint64) (*model.Epoch, error)
+	Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error)
 }
 
 type EpochRepository struct {
@@ -121,7 +123,9 @@ func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*mode
 			updated_at
 	`
 
-	stmt, err := e.Db.PrepareNamedContext(ctx, query)
+	dbExec := util.NewDBExecutor(e.Db)
+
+	stmt, err := dbExec.PrepareNamedContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}

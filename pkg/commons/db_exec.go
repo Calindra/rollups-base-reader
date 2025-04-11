@@ -11,11 +11,11 @@ import (
 
 type staticstring string
 
-const transactionKey staticstring = "safeTxWriteInput"
+const transactionKey staticstring = "safeWriteTransaction"
 
 type DBExecutorInterface interface {
 	sqlx.ExecerContext
-	sqlx.PreparerContext
+	PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error)
 }
 
 type DBExecutor struct {
@@ -31,23 +31,23 @@ func NewDBExecutor(db *sqlx.DB) DBExecutorInterface {
 func (d *DBExecutor) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	tx, isTxEnable := GetTransaction(ctx)
 
-	if !isTxEnable {
+	if isTxEnable {
+		return tx.ExecContext(ctx, query, args...)
+	} else {
 		slog.Debug("Using ExecContext without transaction.")
 		return d.db.ExecContext(ctx, query, args...)
-	} else {
-		return tx.ExecContext(ctx, query, args...)
 	}
 }
 
-// PrepareContext implements DBExecutorInterface.
-func (d *DBExecutor) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+// PrepareNamedContext implements DBExecutorInterface.
+func (d *DBExecutor) PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error) {
 	tx, isTxEnable := GetTransaction(ctx)
 
-	if !isTxEnable {
-		slog.Debug("Using PrepareContext without transaction.")
-		return d.db.PrepareContext(ctx, query)
+	if isTxEnable {
+		return tx.PrepareNamedContext(ctx, query)
 	} else {
-		return tx.PrepareContext(ctx, query)
+		slog.Debug("Using PrepareNamedContext without transaction.")
+		return d.db.PrepareNamedContext(ctx, query)
 	}
 }
 

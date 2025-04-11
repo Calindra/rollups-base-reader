@@ -53,6 +53,11 @@ type MockEpochRepository struct {
 	mock.Mock
 }
 
+// Create implements repository.EpochRepositoryInterface.
+func (m *MockEpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
+	panic("unimplemented")
+}
+
 // FindOne implements repository.EpochRepositoryInterface.
 func (m *MockEpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epoch, error) {
 	panic("unimplemented")

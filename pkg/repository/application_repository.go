@@ -90,29 +90,13 @@ func (a *AppRepository) UpdateDA(
 	daHex := common.Bytes2Hex(da[:])
 	args := []any{daHex, applicationId}
 
-	tx, err := commons.NewTx(ctx, a.Db)
-	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
-	}
-	defer tx.Rollback()
-
-	// Create a prepared statement
-	stmt, err := tx.PreparexContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("error preparing application update query: %w", err)
-	}
-	defer stmt.Close()
+	dbExec := commons.NewDBExecutor(a.Db)
 
 	// Execute the query
-	_, err = stmt.ExecContext(ctx, args...)
-	if err != nil {
+	if _, err := dbExec.ExecContext(ctx, query, args...); err != nil {
 		return fmt.Errorf("error updating application with ID %d: %w", applicationId, err)
 	}
 
-	// Commit the transaction
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("error committing transaction: %w", err)
-	}
 	slog.Debug("updated application data availability", "applicationId", applicationId, "dataAvailability", da)
 	return nil
 }
