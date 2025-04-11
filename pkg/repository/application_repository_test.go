@@ -60,7 +60,6 @@ func (s *AppRepositorySuite) SetupTest() {
 		postgres.WithDatabase(commons.DbName),
 		postgres.WithUsername(commons.DbUser),
 		postgres.WithPassword(commons.DbPassword),
-		testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}),
 	)
 	s.NoError(err)
 	extraArg := "sslmode=disable"

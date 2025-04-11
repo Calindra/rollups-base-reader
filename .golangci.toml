@@ -14,6 +14,7 @@ settings.errcheck.exclude-functions = [
     "(net.Conn).Close",
     "(*os.File).Close",
     "(*compress/gzip.Reader).Close",
+    "(*github.com/jmoiron/sqlx.NamedStmt).Close",
     "(*database/sql.DB).Close",
     "(*database/sql.Stmt).Close",
     "(*database/sql.Tx).Rollback",

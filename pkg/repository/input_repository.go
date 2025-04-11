@@ -173,30 +173,11 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		input.SnapshotURI,
 	}
 
-	// Check if the transaction is already started
-	tx, err := util.NewTx(ctx, i.Db)
-	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
-	}
-	// Rollback the transaction if there is an error
-	defer tx.Rollback()
-
-	// Create a prepared statement in transaction
-	stmt, err := tx.PreparexContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("error preparing input query: %w", err)
-	}
-	defer stmt.Close()
+	dbExec := util.NewDBExecutor(i.Db)
 
 	// Execute the query
-	_, err = stmt.ExecContext(ctx, args...)
-	if err != nil {
+	if _, err := dbExec.ExecContext(ctx, query, args...); err != nil {
 		return fmt.Errorf("error writing input: %w", err)
-	}
-
-	// Commit the transaction
-	if commitErr := tx.Commit(); commitErr != nil {
-		return fmt.Errorf("error committing transaction: %w", commitErr)
 	}
 
 	return nil

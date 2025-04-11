@@ -37,7 +37,7 @@ type OutputValidityProof struct {
 
 // ApplicationMetaData contains all meta data concerning the Application contract.
 var ApplicationMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"contractIConsensus\",\"name\":\"consensus\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"templateHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"claim\",\"type\":\"bytes32\"}],\"name\":\"ClaimNotAccepted\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"}],\"name\":\"InsufficientFunds\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidOutputHashesSiblingsArrayLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"output\",\"type\":\"bytes\"}],\"name\":\"OutputNotExecutable\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"output\",\"type\":\"bytes\"}],\"name\":\"OutputNotReexecutable\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ReentrancyGuardReentrantCall\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"contractIConsensus\",\"name\":\"newConsensus\",\"type\":\"address\"}],\"name\":\"NewConsensus\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"outputIndex\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"output\",\"type\":\"bytes\"}],\"name\":\"OutputExecuted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"output\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"outputIndex\",\"type\":\"uint64\"},{\"internalType\":\"bytes32[]\",\"name\":\"outputHashesSiblings\",\"type\":\"bytes32[]\"}],\"internalType\":\"structOutputValidityProof\",\"name\":\"proof\",\"type\":\"tuple\"}],\"name\":\"executeOutput\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getConsensus\",\"outputs\":[{\"internalType\":\"contractIConsensus\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTemplateHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIConsensus\",\"name\":\"newConsensus\",\"type\":\"address\"}],\"name\":\"migrateToConsensus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"},{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"onERC1155BatchReceived\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"onERC1155Received\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"onERC721Received\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"output\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"outputIndex\",\"type\":\"uint64\"},{\"internalType\":\"bytes32[]\",\"name\":\"outputHashesSiblings\",\"type\":\"bytes32[]\"}],\"internalType\":\"structOutputValidityProof\",\"name\":\"proof\",\"type\":\"tuple\"}],\"name\":\"validateOutput\",\"outputs\":[],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"outputHash\",\"type\":\"bytes32\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"outputIndex\",\"type\":\"uint64\"},{\"internalType\":\"bytes32[]\",\"name\":\"outputHashesSiblings\",\"type\":\"bytes32[]\"}],\"internalType\":\"structOutputValidityProof\",\"name\":\"proof\",\"type\":\"tuple\"}],\"name\":\"validateOutputHash\",\"outputs\":[],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"outputIndex\",\"type\":\"uint256\"}],\"name\":\"wasOutputExecuted\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"outputsMerkleRootValidator\",\"type\":\"address\",\"internalType\":\"contractIOutputsMerkleRootValidator\"},{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"templateHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"dataAvailability\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"receive\",\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"executeOutput\",\"inputs\":[{\"name\":\"output\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"proof\",\"type\":\"tuple\",\"internalType\":\"structOutputValidityProof\",\"components\":[{\"name\":\"outputIndex\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"outputHashesSiblings\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getDataAvailability\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getDeploymentBlockNumber\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getOutputsMerkleRootValidator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIOutputsMerkleRootValidator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTemplateHash\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"migrateToOutputsMerkleRootValidator\",\"inputs\":[{\"name\":\"newOutputsMerkleRootValidator\",\"type\":\"address\",\"internalType\":\"contractIOutputsMerkleRootValidator\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"onERC1155BatchReceived\",\"inputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"},{\"name\":\"\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"},{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"onERC1155Received\",\"inputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"onERC721Received\",\"inputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"validateOutput\",\"inputs\":[{\"name\":\"output\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"proof\",\"type\":\"tuple\",\"internalType\":\"structOutputValidityProof\",\"components\":[{\"name\":\"outputIndex\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"outputHashesSiblings\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}]}],\"outputs\":[],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"validateOutputHash\",\"inputs\":[{\"name\":\"outputHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"proof\",\"type\":\"tuple\",\"internalType\":\"structOutputValidityProof\",\"components\":[{\"name\":\"outputIndex\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"outputHashesSiblings\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}]}],\"outputs\":[],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"wasOutputExecuted\",\"inputs\":[{\"name\":\"outputIndex\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"OutputExecuted\",\"inputs\":[{\"name\":\"outputIndex\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"},{\"name\":\"output\",\"type\":\"bytes\",\"indexed\":false,\"internalType\":\"bytes\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OutputsMerkleRootValidatorChanged\",\"inputs\":[{\"name\":\"newOutputsMerkleRootValidator\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"contractIOutputsMerkleRootValidator\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"InsufficientFunds\",\"inputs\":[{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"balance\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"InvalidOutputHashesSiblingsArrayLength\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidOutputsMerkleRoot\",\"inputs\":[{\"name\":\"outputsMerkleRoot\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"OutputNotExecutable\",\"inputs\":[{\"name\":\"output\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"type\":\"error\",\"name\":\"OutputNotReexecutable\",\"inputs\":[{\"name\":\"output\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"type\":\"error\",\"name\":\"OwnableInvalidOwner\",\"inputs\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"OwnableUnauthorizedAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"ReentrancyGuardReentrantCall\",\"inputs\":[]}]",
 }
 
 // ApplicationABI is the input ABI used to generate the binding from.
@@ -186,12 +186,74 @@ func (_Application *ApplicationTransactorRaw) Transact(opts *bind.TransactOpts, 
 	return _Application.Contract.contract.Transact(opts, method, params...)
 }
 
-// GetConsensus is a free data retrieval call binding the contract method 0x179e740b.
+// GetDataAvailability is a free data retrieval call binding the contract method 0xf02478de.
 //
-// Solidity: function getConsensus() view returns(address)
-func (_Application *ApplicationCaller) GetConsensus(opts *bind.CallOpts) (common.Address, error) {
+// Solidity: function getDataAvailability() view returns(bytes)
+func (_Application *ApplicationCaller) GetDataAvailability(opts *bind.CallOpts) ([]byte, error) {
 	var out []interface{}
-	err := _Application.contract.Call(opts, &out, "getConsensus")
+	err := _Application.contract.Call(opts, &out, "getDataAvailability")
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
+}
+
+// GetDataAvailability is a free data retrieval call binding the contract method 0xf02478de.
+//
+// Solidity: function getDataAvailability() view returns(bytes)
+func (_Application *ApplicationSession) GetDataAvailability() ([]byte, error) {
+	return _Application.Contract.GetDataAvailability(&_Application.CallOpts)
+}
+
+// GetDataAvailability is a free data retrieval call binding the contract method 0xf02478de.
+//
+// Solidity: function getDataAvailability() view returns(bytes)
+func (_Application *ApplicationCallerSession) GetDataAvailability() ([]byte, error) {
+	return _Application.Contract.GetDataAvailability(&_Application.CallOpts)
+}
+
+// GetDeploymentBlockNumber is a free data retrieval call binding the contract method 0xb3a1acd8.
+//
+// Solidity: function getDeploymentBlockNumber() view returns(uint256)
+func (_Application *ApplicationCaller) GetDeploymentBlockNumber(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Application.contract.Call(opts, &out, "getDeploymentBlockNumber")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetDeploymentBlockNumber is a free data retrieval call binding the contract method 0xb3a1acd8.
+//
+// Solidity: function getDeploymentBlockNumber() view returns(uint256)
+func (_Application *ApplicationSession) GetDeploymentBlockNumber() (*big.Int, error) {
+	return _Application.Contract.GetDeploymentBlockNumber(&_Application.CallOpts)
+}
+
+// GetDeploymentBlockNumber is a free data retrieval call binding the contract method 0xb3a1acd8.
+//
+// Solidity: function getDeploymentBlockNumber() view returns(uint256)
+func (_Application *ApplicationCallerSession) GetDeploymentBlockNumber() (*big.Int, error) {
+	return _Application.Contract.GetDeploymentBlockNumber(&_Application.CallOpts)
+}
+
+// GetOutputsMerkleRootValidator is a free data retrieval call binding the contract method 0xa94dfc5a.
+//
+// Solidity: function getOutputsMerkleRootValidator() view returns(address)
+func (_Application *ApplicationCaller) GetOutputsMerkleRootValidator(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Application.contract.Call(opts, &out, "getOutputsMerkleRootValidator")
 
 	if err != nil {
 		return *new(common.Address), err
@@ -203,18 +265,18 @@ func (_Application *ApplicationCaller) GetConsensus(opts *bind.CallOpts) (common
 
 }
 
-// GetConsensus is a free data retrieval call binding the contract method 0x179e740b.
+// GetOutputsMerkleRootValidator is a free data retrieval call binding the contract method 0xa94dfc5a.
 //
-// Solidity: function getConsensus() view returns(address)
-func (_Application *ApplicationSession) GetConsensus() (common.Address, error) {
-	return _Application.Contract.GetConsensus(&_Application.CallOpts)
+// Solidity: function getOutputsMerkleRootValidator() view returns(address)
+func (_Application *ApplicationSession) GetOutputsMerkleRootValidator() (common.Address, error) {
+	return _Application.Contract.GetOutputsMerkleRootValidator(&_Application.CallOpts)
 }
 
-// GetConsensus is a free data retrieval call binding the contract method 0x179e740b.
+// GetOutputsMerkleRootValidator is a free data retrieval call binding the contract method 0xa94dfc5a.
 //
-// Solidity: function getConsensus() view returns(address)
-func (_Application *ApplicationCallerSession) GetConsensus() (common.Address, error) {
-	return _Application.Contract.GetConsensus(&_Application.CallOpts)
+// Solidity: function getOutputsMerkleRootValidator() view returns(address)
+func (_Application *ApplicationCallerSession) GetOutputsMerkleRootValidator() (common.Address, error) {
+	return _Application.Contract.GetOutputsMerkleRootValidator(&_Application.CallOpts)
 }
 
 // GetTemplateHash is a free data retrieval call binding the contract method 0x61b12c66.
@@ -420,25 +482,25 @@ func (_Application *ApplicationTransactorSession) ExecuteOutput(output []byte, p
 	return _Application.Contract.ExecuteOutput(&_Application.TransactOpts, output, proof)
 }
 
-// MigrateToConsensus is a paid mutator transaction binding the contract method 0xfc411683.
+// MigrateToOutputsMerkleRootValidator is a paid mutator transaction binding the contract method 0xbf8abff8.
 //
-// Solidity: function migrateToConsensus(address newConsensus) returns()
-func (_Application *ApplicationTransactor) MigrateToConsensus(opts *bind.TransactOpts, newConsensus common.Address) (*types.Transaction, error) {
-	return _Application.contract.Transact(opts, "migrateToConsensus", newConsensus)
+// Solidity: function migrateToOutputsMerkleRootValidator(address newOutputsMerkleRootValidator) returns()
+func (_Application *ApplicationTransactor) MigrateToOutputsMerkleRootValidator(opts *bind.TransactOpts, newOutputsMerkleRootValidator common.Address) (*types.Transaction, error) {
+	return _Application.contract.Transact(opts, "migrateToOutputsMerkleRootValidator", newOutputsMerkleRootValidator)
 }
 
-// MigrateToConsensus is a paid mutator transaction binding the contract method 0xfc411683.
+// MigrateToOutputsMerkleRootValidator is a paid mutator transaction binding the contract method 0xbf8abff8.
 //
-// Solidity: function migrateToConsensus(address newConsensus) returns()
-func (_Application *ApplicationSession) MigrateToConsensus(newConsensus common.Address) (*types.Transaction, error) {
-	return _Application.Contract.MigrateToConsensus(&_Application.TransactOpts, newConsensus)
+// Solidity: function migrateToOutputsMerkleRootValidator(address newOutputsMerkleRootValidator) returns()
+func (_Application *ApplicationSession) MigrateToOutputsMerkleRootValidator(newOutputsMerkleRootValidator common.Address) (*types.Transaction, error) {
+	return _Application.Contract.MigrateToOutputsMerkleRootValidator(&_Application.TransactOpts, newOutputsMerkleRootValidator)
 }
 
-// MigrateToConsensus is a paid mutator transaction binding the contract method 0xfc411683.
+// MigrateToOutputsMerkleRootValidator is a paid mutator transaction binding the contract method 0xbf8abff8.
 //
-// Solidity: function migrateToConsensus(address newConsensus) returns()
-func (_Application *ApplicationTransactorSession) MigrateToConsensus(newConsensus common.Address) (*types.Transaction, error) {
-	return _Application.Contract.MigrateToConsensus(&_Application.TransactOpts, newConsensus)
+// Solidity: function migrateToOutputsMerkleRootValidator(address newOutputsMerkleRootValidator) returns()
+func (_Application *ApplicationTransactorSession) MigrateToOutputsMerkleRootValidator(newOutputsMerkleRootValidator common.Address) (*types.Transaction, error) {
+	return _Application.Contract.MigrateToOutputsMerkleRootValidator(&_Application.TransactOpts, newOutputsMerkleRootValidator)
 }
 
 // OnERC1155BatchReceived is a paid mutator transaction binding the contract method 0xbc197c81.
@@ -565,140 +627,6 @@ func (_Application *ApplicationSession) Receive() (*types.Transaction, error) {
 // Solidity: receive() payable returns()
 func (_Application *ApplicationTransactorSession) Receive() (*types.Transaction, error) {
 	return _Application.Contract.Receive(&_Application.TransactOpts)
-}
-
-// ApplicationNewConsensusIterator is returned from FilterNewConsensus and is used to iterate over the raw logs and unpacked data for NewConsensus events raised by the Application contract.
-type ApplicationNewConsensusIterator struct {
-	Event *ApplicationNewConsensus // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *ApplicationNewConsensusIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(ApplicationNewConsensus)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(ApplicationNewConsensus)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *ApplicationNewConsensusIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *ApplicationNewConsensusIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// ApplicationNewConsensus represents a NewConsensus event raised by the Application contract.
-type ApplicationNewConsensus struct {
-	NewConsensus common.Address
-	Raw          types.Log // Blockchain specific contextual infos
-}
-
-// FilterNewConsensus is a free log retrieval operation binding the contract event 0x4991c6f37185659e276ff918a96f3e20e6c5abcd8c9aab450dc19c2f7ad35cb5.
-//
-// Solidity: event NewConsensus(address newConsensus)
-func (_Application *ApplicationFilterer) FilterNewConsensus(opts *bind.FilterOpts) (*ApplicationNewConsensusIterator, error) {
-
-	logs, sub, err := _Application.contract.FilterLogs(opts, "NewConsensus")
-	if err != nil {
-		return nil, err
-	}
-	return &ApplicationNewConsensusIterator{contract: _Application.contract, event: "NewConsensus", logs: logs, sub: sub}, nil
-}
-
-// WatchNewConsensus is a free log subscription operation binding the contract event 0x4991c6f37185659e276ff918a96f3e20e6c5abcd8c9aab450dc19c2f7ad35cb5.
-//
-// Solidity: event NewConsensus(address newConsensus)
-func (_Application *ApplicationFilterer) WatchNewConsensus(opts *bind.WatchOpts, sink chan<- *ApplicationNewConsensus) (event.Subscription, error) {
-
-	logs, sub, err := _Application.contract.WatchLogs(opts, "NewConsensus")
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(ApplicationNewConsensus)
-				if err := _Application.contract.UnpackLog(event, "NewConsensus", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseNewConsensus is a log parse operation binding the contract event 0x4991c6f37185659e276ff918a96f3e20e6c5abcd8c9aab450dc19c2f7ad35cb5.
-//
-// Solidity: event NewConsensus(address newConsensus)
-func (_Application *ApplicationFilterer) ParseNewConsensus(log types.Log) (*ApplicationNewConsensus, error) {
-	event := new(ApplicationNewConsensus)
-	if err := _Application.contract.UnpackLog(event, "NewConsensus", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
 }
 
 // ApplicationOutputExecutedIterator is returned from FilterOutputExecuted and is used to iterate over the raw logs and unpacked data for OutputExecuted events raised by the Application contract.
@@ -830,6 +758,140 @@ func (_Application *ApplicationFilterer) WatchOutputExecuted(opts *bind.WatchOpt
 func (_Application *ApplicationFilterer) ParseOutputExecuted(log types.Log) (*ApplicationOutputExecuted, error) {
 	event := new(ApplicationOutputExecuted)
 	if err := _Application.contract.UnpackLog(event, "OutputExecuted", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// ApplicationOutputsMerkleRootValidatorChangedIterator is returned from FilterOutputsMerkleRootValidatorChanged and is used to iterate over the raw logs and unpacked data for OutputsMerkleRootValidatorChanged events raised by the Application contract.
+type ApplicationOutputsMerkleRootValidatorChangedIterator struct {
+	Event *ApplicationOutputsMerkleRootValidatorChanged // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ApplicationOutputsMerkleRootValidatorChangedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ApplicationOutputsMerkleRootValidatorChanged)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ApplicationOutputsMerkleRootValidatorChanged)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ApplicationOutputsMerkleRootValidatorChangedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ApplicationOutputsMerkleRootValidatorChangedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ApplicationOutputsMerkleRootValidatorChanged represents a OutputsMerkleRootValidatorChanged event raised by the Application contract.
+type ApplicationOutputsMerkleRootValidatorChanged struct {
+	NewOutputsMerkleRootValidator common.Address
+	Raw                           types.Log // Blockchain specific contextual infos
+}
+
+// FilterOutputsMerkleRootValidatorChanged is a free log retrieval operation binding the contract event 0x6ad3188ba8f430fba0656cb0a7e839ab2020d5586ba11a1477d18f7092f8bece.
+//
+// Solidity: event OutputsMerkleRootValidatorChanged(address newOutputsMerkleRootValidator)
+func (_Application *ApplicationFilterer) FilterOutputsMerkleRootValidatorChanged(opts *bind.FilterOpts) (*ApplicationOutputsMerkleRootValidatorChangedIterator, error) {
+
+	logs, sub, err := _Application.contract.FilterLogs(opts, "OutputsMerkleRootValidatorChanged")
+	if err != nil {
+		return nil, err
+	}
+	return &ApplicationOutputsMerkleRootValidatorChangedIterator{contract: _Application.contract, event: "OutputsMerkleRootValidatorChanged", logs: logs, sub: sub}, nil
+}
+
+// WatchOutputsMerkleRootValidatorChanged is a free log subscription operation binding the contract event 0x6ad3188ba8f430fba0656cb0a7e839ab2020d5586ba11a1477d18f7092f8bece.
+//
+// Solidity: event OutputsMerkleRootValidatorChanged(address newOutputsMerkleRootValidator)
+func (_Application *ApplicationFilterer) WatchOutputsMerkleRootValidatorChanged(opts *bind.WatchOpts, sink chan<- *ApplicationOutputsMerkleRootValidatorChanged) (event.Subscription, error) {
+
+	logs, sub, err := _Application.contract.WatchLogs(opts, "OutputsMerkleRootValidatorChanged")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ApplicationOutputsMerkleRootValidatorChanged)
+				if err := _Application.contract.UnpackLog(event, "OutputsMerkleRootValidatorChanged", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseOutputsMerkleRootValidatorChanged is a log parse operation binding the contract event 0x6ad3188ba8f430fba0656cb0a7e839ab2020d5586ba11a1477d18f7092f8bece.
+//
+// Solidity: event OutputsMerkleRootValidatorChanged(address newOutputsMerkleRootValidator)
+func (_Application *ApplicationFilterer) ParseOutputsMerkleRootValidatorChanged(log types.Log) (*ApplicationOutputsMerkleRootValidatorChanged, error) {
+	event := new(ApplicationOutputsMerkleRootValidatorChanged)
+	if err := _Application.contract.UnpackLog(event, "OutputsMerkleRootValidatorChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

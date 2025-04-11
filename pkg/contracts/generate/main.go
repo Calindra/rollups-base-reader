@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	openzeppelin        = "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-5.1.0.tgz"
-	rollupsContractsUrl = "https://registry.npmjs.org/@cartesi/rollups/-/rollups-2.0.0-rc.12.tgz"
-	baseContractsPath   = "package/export/artifacts/contracts/"
+	openzeppelin        = "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-5.2.0.tgz"
+	rollupsContractsUrl = "https://registry.npmjs.org/@cartesi/rollups/-/rollups-2.0.0-rc.17.tgz"
+	baseContractsPath   = "package/out/"
 	bindingPkg          = "contracts"
 )
 
@@ -53,39 +53,44 @@ var bindingsOpenZeppelin = []contractBinding{
 
 var bindings = []contractBinding{
 	{
-		jsonPath: baseContractsPath + "inputs/InputBox.sol/InputBox.json",
+		jsonPath: baseContractsPath + "InputBox.sol/InputBox.json",
 		typeName: "InputBox",
 		outFile:  "input_box.go",
 	},
 	{
-		jsonPath: baseContractsPath + "common/Inputs.sol/Inputs.json",
+		jsonPath: baseContractsPath + "Inputs.sol/Inputs.json",
 		typeName: "Inputs",
 		outFile:  "inputs.go",
 	},
 	{
-		jsonPath: baseContractsPath + "dapp/Application.sol/Application.json",
+		jsonPath: baseContractsPath + "Application.sol/Application.json",
 		typeName: "Application",
 		outFile:  "application.go",
 	},
 	{
-		jsonPath: baseContractsPath + "common/Outputs.sol/Outputs.json",
+		jsonPath: baseContractsPath + "Outputs.sol/Outputs.json",
 		typeName: "Outputs",
 		outFile:  "outputs.go",
 	},
 	{
-		jsonPath: baseContractsPath + "dapp/IApplicationFactory.sol/IApplicationFactory.json",
+		jsonPath: baseContractsPath + "IApplicationFactory.sol/IApplicationFactory.json",
 		typeName: "IApplicationFactory",
 		outFile:  "application_factory.go",
 	},
 	{
-		jsonPath: baseContractsPath + "consensus/authority/IAuthorityFactory.sol/IAuthorityFactory.json",
+		jsonPath: baseContractsPath + "IAuthorityFactory.sol/IAuthorityFactory.json",
 		typeName: "IAuthorityFactory",
 		outFile:  "authority_factory.go",
 	},
 	{
-		jsonPath: baseContractsPath + "consensus/IConsensus.sol/IConsensus.json",
+		jsonPath: baseContractsPath + "IConsensus.sol/IConsensus.json",
 		typeName: "IConsensus",
 		outFile:  "consensus.go",
+	},
+	{
+		jsonPath: baseContractsPath + "DataAvailability.sol/DataAvailability.json",
+		typeName: "DataAvailability",
+		outFile: "data_availability.go",
 	},
 }
 

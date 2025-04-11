@@ -61,7 +61,6 @@ func (s *EpochRepositorySuite) SetupTest() {
 		postgres.WithDatabase(commons.DbName),
 		postgres.WithUsername(commons.DbUser),
 		postgres.WithPassword(commons.DbPassword),
-		testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}),
 	)
 	s.NoError(err)
 	extraArg := "sslmode=disable"
@@ -119,4 +118,21 @@ func (s *EpochRepositorySuite) TestFindOne() {
 	s.NotNil(epoch)
 	s.Equal(18, int(epoch.Index))
 	s.Equal(model.EpochStatus_ClaimComputed, epoch.Status)
+}
+
+func (s *EpochRepositorySuite) TestEpochRepositoryCreate() {
+	ctx, ctxCancel := context.WithCancel(s.ctx)
+	defer ctxCancel()
+	epoch := &model.Epoch{
+		Index:         100,
+		FirstBlock:    100,
+		LastBlock:     200,
+		Status:        model.EpochStatus_Open,
+		VirtualIndex:  100,
+		ApplicationID: 1,
+	}
+	epochUpdated, err := s.epochRepository.Create(ctx, epoch)
+	s.NoError(err)
+	s.NotNil(epochUpdated.UpdatedAt)
+	s.NotNil(epochUpdated.CreatedAt)
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	util "github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -120,12 +121,14 @@ func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*mode
 			:status,
 			:virtual_index
 		)
-		RETURNING 
+		RETURNING
 			created_at,
 			updated_at
 	`
 
-	stmt, err := e.Db.PrepareNamedContext(ctx, query)
+	dbExec := util.NewDBExecutor(e.Db)
+
+	stmt, err := dbExec.PrepareNamedContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}

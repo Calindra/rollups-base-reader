@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math/big"
 	"net/http"
 	"strings"
 
+	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/eip712"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -39,11 +39,11 @@ func EncodePaioFormat(sigAndData eip712.SigAndData) (string, error) {
 	}
 	address := typedData.Message["app"].(string)
 	data := typedData.Message["data"].(string)
-	nonce, err := ToUint64(typedData.Message["nonce"])
+	nonce, err := commons.ToUint64(typedData.Message["nonce"])
 	if err != nil {
-		return "", fmt.Errorf("nonce error")
+		return "", fmt.Errorf("nonce error: %w", err)
 	}
-	maxGasPrice, err := ToBig(typedData.Message["max_gas_price"])
+	maxGasPrice, err := commons.ToBig(typedData.Message["max_gas_price"])
 	if err != nil {
 		return "", fmt.Errorf("max_gas_price error")
 	}
@@ -85,32 +85,6 @@ func EncodePaioFormat(sigAndData eip712.SigAndData) (string, error) {
 type PaioReqMessage struct {
 	Signature string `json:"signature"`
 	Message   string `json:"message"`
-}
-
-func ToUint64(value interface{}) (uint64, error) {
-	b, err := ToBig(value)
-	if err != nil {
-		return 0, err
-	}
-	return b.Uint64(), nil
-}
-
-func ToBig(value interface{}) (*big.Int, error) {
-	nonce := big.NewInt(0)
-	nonceStr, ok := value.(string)
-	if !ok {
-		nonceFloat, ok := value.(float64)
-		if !ok {
-			return nil, fmt.Errorf("converting to big error")
-		}
-		nonce = nonce.SetUint64(uint64(nonceFloat))
-	} else {
-		nonce, ok = nonce.SetString(nonceStr, 10) // nolint
-		if !ok {
-			return nil, fmt.Errorf("converting to big error 2")
-		}
-	}
-	return nonce, nil
 }
 
 // SubmitSigAndData implements Sender.
