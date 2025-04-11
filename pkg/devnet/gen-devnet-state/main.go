@@ -96,5 +96,5 @@ func main() {
 		slog.Info("Finished copying the state file")
 	}()
 	run("docker", "cp", "temp-devnet:/usr/share/cartesi/anvil_state.json", ".")
-	// run("docker", "cp", "temp-devnet:/usr/share/cartesi/localhost.json", ".")
+	run("docker", "cp", "temp-devnet:/usr/share/cartesi/deployments/", ".")
 }
