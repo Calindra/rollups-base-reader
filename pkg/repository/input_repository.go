@@ -159,12 +159,19 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		block_number,
 		raw_data,
 		status,
-		machine_hash,
-		outputs_hash,
 		transaction_reference,
 		snapshot_uri
-	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
-	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status, input.MachineHash, input.OutputsHash, input.TransactionReference, input.SnapshotURI}
+	) VALUES ($1, $2, $3, $4, $5, $6, decode($7, 'hex'), $8)`
+	args := []any{
+		input.EpochApplicationID,
+		input.EpochIndex,
+		input.Index,
+		input.BlockNumber,
+		input.RawData,
+		input.Status,
+		input.TransactionReference.Hex()[2:],
+		input.SnapshotURI,
+	}
 
 	dbExec := util.NewDBExecutor(i.Db)
 

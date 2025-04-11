@@ -106,7 +106,8 @@ var (
 	// ABI encoded "InputBox(address)"
 	DataAvailability_InputBox = DataAvailabilitySelector{0xb1, 0x2c, 0x9e, 0xde}
 	// string: avda
-	DataAvailability_Avail = DataAvailabilitySelector{0x61, 0x76, 0x64, 0x61}
+	// DataAvailability_Avail = DataAvailabilitySelector{0x61, 0x76, 0x64, 0x61}
+	DataAvailability_Avail = DataAvailabilitySelector{0x85, 0x79, 0xfd, 0x0c} // temp borrow from espresso
 )
 
 func (d *DataAvailabilitySelector) MarshalJSON() ([]byte, error) {

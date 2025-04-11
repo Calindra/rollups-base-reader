@@ -53,6 +53,9 @@ func (e *EpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, appID i
 
 	// Execute the query
 	err = stmt.GetContext(ctx, &epoch, args...)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

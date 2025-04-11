@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/calindra/rollups-base-reader/pkg/repository"
@@ -31,6 +32,27 @@ func (s *InputService) CreateInput(ctx context.Context, input model.Input) error
 	latestEpoch, err := s.EpochRepository.GetLatestOpenEpochByAppID(ctx, appID)
 	if err != nil {
 		return fmt.Errorf("failed to find latest epoch for appID %d: %w", appID, err)
+	}
+
+	if latestEpoch == nil {
+		app, err := s.AppRepository.FindOneByID(ctx, appID)
+		if err != nil {
+			return fmt.Errorf("failed to find the app %d: %w", appID, err)
+		}
+		epoch := model.Epoch{
+			ApplicationID: appID,
+			Index:         0,
+			FirstBlock:    input.BlockNumber,
+			LastBlock:     input.BlockNumber + app.EpochLength,
+			Status:        model.EpochStatus_Open,
+			VirtualIndex:  0,
+		}
+		epochCreated, err := s.EpochRepository.Create(ctx, &epoch)
+		if err != nil {
+			return fmt.Errorf("failed to create an epoch for the app %d: %w", appID, err)
+		}
+		latestEpoch = epochCreated
+		slog.Info("New epoch created")
 	}
 
 	// Set correct epoch index

@@ -5,6 +5,7 @@ package inputreader
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"log/slog"
 	"math/big"
@@ -121,12 +122,13 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 
 			input := model.InputExtra{
 				Input: model.Input{
-					Index:              inputIndex,
-					BlockNumber:        header.Number.Uint64(),
-					RawData:            rawData,
-					Status:             model.InputCompletionStatus_None,
-					EpochApplicationID: -1,
-					EpochIndex:         0,
+					Index:                inputIndex,
+					BlockNumber:          header.Number.Uint64(),
+					RawData:              rawData,
+					Status:               model.InputCompletionStatus_None,
+					EpochApplicationID:   -1,
+					EpochIndex:           0,
+					TransactionReference: Uint64ToHash(inputIndex),
 				},
 				BlockTimestamp:  unixTimestamp,
 				AppContract:     appContract,
@@ -147,4 +149,10 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 	}
 
 	return result, nil
+}
+
+func Uint64ToHash(value uint64) *common.Hash {
+	var hash common.Hash
+	binary.BigEndian.PutUint64(hash[0:8], value)
+	return &hash
 }

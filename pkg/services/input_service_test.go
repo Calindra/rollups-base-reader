@@ -76,6 +76,11 @@ type MockAppRepository struct {
 	mock.Mock
 }
 
+// FindOneByID implements repository.AppRepositoryInterface.
+func (m *MockAppRepository) FindOneByID(ctx context.Context, id int64) (*model.Application, error) {
+	panic("unimplemented")
+}
+
 // FindAllByDA implements repository.AppRepositoryInterface.
 func (m *MockAppRepository) FindAllByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error) {
 	args := m.Called(da)
