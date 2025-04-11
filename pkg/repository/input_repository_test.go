@@ -353,7 +353,6 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	s.Equal(int(input1.Index), int(inputs.Rows[0].Index))
 }
 
-
 func (s *InputRepositorySuite) TestCountMap() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
@@ -378,7 +377,6 @@ func (s *InputRepositorySuite) TestCountMap() {
 	s.NoError(err)
 	err = s.inputRepository.Create(s.ctx, input2)
 	s.NoError(err)
-
 
 	dataMap, err := s.inputRepository.CountMap(ctx)
 	s.NoError(err)

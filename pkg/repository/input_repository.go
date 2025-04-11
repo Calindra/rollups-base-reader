@@ -167,11 +167,8 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		block_number,
 		raw_data,
 		status,
-		machine_hash,
-		outputs_hash,
-		transaction_reference,
 		snapshot_uri
-	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+	) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	args := []any{
 		input.EpochApplicationID,
 		input.EpochIndex,
@@ -179,9 +176,6 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		input.BlockNumber,
 		input.RawData,
 		input.Status,
-		hashPtrToBytes(input.MachineHash),
-		hashPtrToBytes(input.OutputsHash),
-		hashPtrToBytes(input.TransactionReference),
 		input.SnapshotURI,
 	}
 
