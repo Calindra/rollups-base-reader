@@ -4,8 +4,11 @@
 package devnet
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -18,6 +21,14 @@ type AnvilSuite struct {
 	suite.Suite
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+}
+
+//
+// Suite entry point
+//
+
+func TestAnvilSuite(t *testing.T) {
+	suite.Run(t, &AnvilSuite{})
 }
 
 func (s *AnvilSuite) SetupTest() {
@@ -96,10 +107,27 @@ func (s *AnvilSuite) TestAnvilWorker() {
 	s.True(canceled)
 }
 
-//
-// Suite entry point
-//
+func (s *AnvilSuite) TestGetContract() {
+	contracts, err := GetContractInfo()
+	s.NoError(err)
+	s.NotEmpty(contracts)
+}
 
-func TestAnvilSuite(t *testing.T) {
-	suite.Run(t, &AnvilSuite{})
+type addressBook struct {
+	*bytes.Buffer
+}
+
+// Close implements io.WriteCloser.
+func (a *addressBook) Close() error {
+	return nil
+}
+
+var _ io.WriteCloser = (*addressBook)(nil)
+
+func (s *AnvilSuite) TestAddressbookContract() {
+	output := &addressBook{bytes.NewBufferString("")}
+	err := ShowAddresses(output)
+	s.NoError(err)
+	s.NotEmpty(output.String())
+	slog.Info("output", "output", output.String())
 }
