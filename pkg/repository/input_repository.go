@@ -11,6 +11,7 @@ import (
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -93,12 +94,11 @@ func transformToInputQuery(
 	return query, args, count, nil
 }
 
-
 func (i *InputRepository) CountMap(ctx context.Context) (map[int64]uint64, error) {
 	mapAddress := make(map[int64]uint64)
 
 	type InputCount struct {
-		AppID int64 `db:"epoch_application_id"`
+		AppID int64  `db:"epoch_application_id"`
 		Count uint64 `db:"counter"`
 	}
 
@@ -152,6 +152,13 @@ func (i *InputRepository) Count(
 	return count, nil
 }
 
+func hashPtrToBytes(h *common.Hash) []byte {
+	if h == nil {
+		return nil
+	}
+	return h[:]
+}
+
 func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 	query := `INSERT INTO input (
 		epoch_application_id,
@@ -165,7 +172,18 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		transaction_reference,
 		snapshot_uri
 	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
-	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status, input.MachineHash, input.OutputsHash, input.TransactionReference, input.SnapshotURI}
+	args := []any{
+		input.EpochApplicationID,
+		input.EpochIndex,
+		input.Index,
+		input.BlockNumber,
+		input.RawData,
+		input.Status,
+		hashPtrToBytes(input.MachineHash),
+		hashPtrToBytes(input.OutputsHash),
+		hashPtrToBytes(input.TransactionReference),
+		input.SnapshotURI,
+	}
 
 	// Check if the transaction is already started
 	tx, err := util.NewTx(ctx, i.Db)
