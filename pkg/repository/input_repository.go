@@ -178,8 +178,8 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	// // Rollback the transaction if there is an error
-	// defer tx.Rollback()
+	// Rollback the transaction if there is an error
+	defer tx.Rollback()
 
 	// Create a prepared statement in transaction
 	stmt, err := tx.PreparexContext(ctx, query)
@@ -195,9 +195,9 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 	}
 
 	// Commit the transaction
-	// if commitErr := tx.Commit(); commitErr != nil {
-	// 	return fmt.Errorf("error committing transaction: %w", commitErr)
-	// }
+	if commitErr := tx.Commit(); commitErr != nil {
+		return fmt.Errorf("error committing transaction: %w", commitErr)
+	}
 
 	return nil
 }
