@@ -57,6 +57,7 @@ func (s *InputService) CreateInput(ctx context.Context, input model.Input) error
 
 	// Set correct epoch index
 	input.EpochIndex = latestEpoch.Index
+	input.TransactionReference = &common.MaxHash
 
 	err = s.InputRepository.Create(ctx, input)
 	if err != nil {
