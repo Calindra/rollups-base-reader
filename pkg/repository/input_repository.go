@@ -11,7 +11,6 @@ import (
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -150,13 +149,6 @@ func (i *InputRepository) Count(
 		return 0, err
 	}
 	return count, nil
-}
-
-func hashPtrToBytes(h *common.Hash) []byte {
-	if h == nil {
-		return nil
-	}
-	return h[:]
 }
 
 func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
