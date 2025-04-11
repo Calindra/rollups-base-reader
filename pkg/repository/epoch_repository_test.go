@@ -124,11 +124,12 @@ func (s *EpochRepositorySuite) TestEpochRepositoryCreate() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
 	epoch := &model.Epoch{
-		Index:        100,
-		FirstBlock:   100,
-		LastBlock:    200,
-		Status:       model.EpochStatus_Open,
-		VirtualIndex: 1,
+		Index:         100,
+		FirstBlock:    100,
+		LastBlock:     200,
+		Status:        model.EpochStatus_Open,
+		VirtualIndex:  100,
+		ApplicationID: 1,
 	}
 	epochUpdated, err := s.epochRepository.Create(ctx, epoch)
 	s.NoError(err)
