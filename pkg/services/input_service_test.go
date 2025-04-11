@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"errors"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -54,8 +54,16 @@ type MockEpochRepository struct {
 }
 
 // Create implements repository.EpochRepositoryInterface.
-func (m *MockEpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
-	panic("unimplemented")
+func (m *MockEpochRepository) Create(ctx context.Context, epoch model.Epoch) (*model.Epoch, error) {
+	args := m.Called(mock.Anything)
+
+	// Check if return value is nil
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	// Default behavior - cast to *model.Epoch
+	return args.Get(0).(*model.Epoch), args.Error(1)
 }
 
 // FindOne implements repository.EpochRepositoryInterface.
@@ -78,7 +86,11 @@ type MockAppRepository struct {
 
 // FindOneByID implements repository.AppRepositoryInterface.
 func (m *MockAppRepository) FindOneByID(ctx context.Context, id int64) (*model.Application, error) {
-	panic("unimplemented")
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.Application), args.Error(1)
 }
 
 // FindAllByDA implements repository.AppRepositoryInterface.
@@ -194,14 +206,14 @@ func (is *InputServiceTestSuite) TestCreateInputWithAddress() {
 	is.mockInputRepo.AssertCalled(is.T(), "Create", updatedInput)
 }
 
-func (is *InputServiceTestSuite) TestCreateInputWithAddress_AppNotFound() {
+func (is *InputServiceTestSuite) TestCreateInputWithAddressAppNotFound() {
 	ctx, ctxCancel := context.WithCancel(is.ctx)
 	defer ctxCancel()
 
 	appContract := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
 	input := model.Input{RawData: []byte("test-payload")}
 
-	is.mockAppRepo.On("FindOneByContract", appContract).Return((*model.Application)(nil), errors.New("app not found"))
+	is.mockAppRepo.On("FindOneByContract", appContract).Return((*model.Application)(nil), sql.ErrNoRows)
 
 	err := is.service.CreateInputWithAddress(ctx, appContract, input)
 
@@ -209,4 +221,43 @@ func (is *InputServiceTestSuite) TestCreateInputWithAddress_AppNotFound() {
 	is.mockAppRepo.AssertCalled(is.T(), "FindOneByContract", appContract)
 	is.mockEpochRepo.AssertNotCalled(is.T(), "GetLatestOpenEpochByAppID", mock.Anything, mock.Anything)
 	is.mockInputRepo.AssertNotCalled(is.T(), "Create", mock.Anything, mock.Anything)
+}
+
+func (is *InputServiceTestSuite) TestCreateInputEpochNotFound() {
+	ctx, ctxCancel := context.WithCancel(is.ctx)
+	defer ctxCancel()
+
+	appID := int64(1)
+	input := model.Input{RawData: []byte("test-payload"), EpochApplicationID: appID, EpochIndex: 999, BlockNumber: 100}
+	mockApp := &model.Application{ID: appID, EpochLength: 10}
+	mockEpoch := &model.Epoch{
+		ApplicationID: appID,
+		Index:         0,
+		FirstBlock:    input.BlockNumber,
+		LastBlock:     input.BlockNumber + mockApp.EpochLength,
+		Status:        model.EpochStatus_Open,
+		VirtualIndex:  0,
+	}
+
+	// Preparing the expected input after updating with the new epoch
+	updatedInput := model.Input{
+		RawData:            input.RawData,
+		EpochApplicationID: appID,
+		EpochIndex:         mockEpoch.Index,
+		BlockNumber:        input.BlockNumber,
+	}
+
+	// Mock to return error when looking for an open epoch
+	is.mockEpochRepo.On("GetLatestOpenEpochByAppID", appID).Return((*model.Epoch)(nil), sql.ErrNoRows)
+	is.mockAppRepo.On("FindOneByID", appID).Return(mockApp, nil)
+	is.mockEpochRepo.On("Create", mock.Anything).Return(mockEpoch, nil)
+	is.mockInputRepo.On("Create", updatedInput).Return(nil)
+
+	err := is.service.CreateInput(ctx, input)
+
+	is.NoError(err)
+	is.mockAppRepo.AssertCalled(is.T(), "FindOneByID", appID)
+	is.mockEpochRepo.AssertCalled(is.T(), "GetLatestOpenEpochByAppID", appID)
+	is.mockEpochRepo.AssertCalled(is.T(), "Create", mock.Anything)
+	is.mockInputRepo.AssertCalled(is.T(), "Create", updatedInput)
 }

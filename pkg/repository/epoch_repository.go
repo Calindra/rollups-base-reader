@@ -14,7 +14,7 @@ import (
 type EpochRepositoryInterface interface {
 	GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error)
 	FindOne(ctx context.Context, index uint64) (*model.Epoch, error)
-	Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error)
+	Create(ctx context.Context, epoch model.Epoch) (*model.Epoch, error)
 }
 
 type EpochRepository struct {
@@ -53,9 +53,6 @@ func (e *EpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, appID i
 
 	// Execute the query
 	err = stmt.GetContext(ctx, &epoch, args...)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +97,7 @@ func (e *EpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epo
 	return &epoch, nil
 }
 
-func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
+func (e *EpochRepository) Create(ctx context.Context, epoch model.Epoch) (*model.Epoch, error) {
 	query := `
 		INSERT INTO epoch (
 			application_id,
@@ -146,5 +143,5 @@ func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*mode
 	}
 	epoch.CreatedAt = inserted.CreatedAt
 	epoch.UpdatedAt = inserted.UpdatedAt
-	return epoch, nil
+	return &epoch, nil
 }

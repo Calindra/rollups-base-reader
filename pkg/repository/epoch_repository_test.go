@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"io"
 	"log/slog"
 	"net/http"
@@ -89,6 +90,7 @@ func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppID() {
 	appID := int64(999)
 	_, err := s.epochRepository.GetLatestOpenEpochByAppID(ctx, appID)
 	s.Error(err)
+	s.Equal(sql.ErrNoRows, err)
 }
 
 func (s *EpochRepositorySuite) TestGetLatestOpenEpochByAppID() {
@@ -123,7 +125,7 @@ func (s *EpochRepositorySuite) TestFindOne() {
 func (s *EpochRepositorySuite) TestEpochRepositoryCreate() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
-	epoch := &model.Epoch{
+	epoch := model.Epoch{
 		Index:         100,
 		FirstBlock:    100,
 		LastBlock:     200,
