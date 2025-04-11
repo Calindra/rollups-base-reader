@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
@@ -92,4 +93,51 @@ func (e *EpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epo
 	}
 
 	return &epoch, nil
+}
+
+func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
+	query := `
+		INSERT INTO epoch (
+			application_id,
+			index,
+			first_block,
+			last_block,
+			claim_hash,
+			claim_transaction_hash,
+			status,
+			virtual_index
+		) VALUES (
+			:application_id,
+			:index,
+			:first_block,
+			:last_block,
+			:claim_hash,
+			:claim_transaction_hash,
+			:status,
+			:virtual_index
+		)
+		RETURNING
+			created_at,
+			updated_at
+	`
+
+	stmt, err := e.Db.PrepareNamedContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	type CreatedEpochMetadata struct {
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
+	}
+	var inserted CreatedEpochMetadata
+
+	err = stmt.GetContext(ctx, &inserted, epoch)
+	if err != nil {
+		return nil, err
+	}
+	epoch.CreatedAt = inserted.CreatedAt
+	epoch.UpdatedAt = inserted.UpdatedAt
+	return epoch, nil
 }
