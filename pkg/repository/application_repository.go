@@ -57,7 +57,7 @@ func (a *AppRepository) FindOneByContract(
 // FindOneByID returns a single application by ID
 func (a *AppRepository) FindOneByID(
 	ctx context.Context,
-	id uint64,
+	id int64,
 ) (*model.Application, error) {
 	query := `SELECT *
 	FROM application
