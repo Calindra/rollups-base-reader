@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/calindra/rollups-base-reader/pkg/repository"
@@ -46,7 +47,12 @@ func (s *InputService) CreateInput(ctx context.Context, input model.Input) error
 			Status:        model.EpochStatus_Open,
 			VirtualIndex:  0,
 		}
-		s.EpochRepository.Create(ctx, &epoch)
+		epochCreated, err := s.EpochRepository.Create(ctx, &epoch)
+		if err != nil {
+			return fmt.Errorf("failed to create an epoch for the app %d: %w", appID, err)
+		}
+		latestEpoch = epochCreated
+		slog.Info("New epoch created")
 	}
 
 	// Set correct epoch index
