@@ -167,8 +167,9 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		block_number,
 		raw_data,
 		status,
+		transaction_reference,
 		snapshot_uri
-	) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	) VALUES ($1, $2, $3, $4, $5, $6, decode($7, 'hex'), $8)`
 	args := []any{
 		input.EpochApplicationID,
 		input.EpochIndex,
@@ -176,6 +177,7 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		input.BlockNumber,
 		input.RawData,
 		input.Status,
+		input.TransactionReference.Hex()[2:],
 		input.SnapshotURI,
 	}
 
