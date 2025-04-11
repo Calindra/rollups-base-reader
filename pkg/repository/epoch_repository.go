@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
@@ -120,14 +121,6 @@ func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*mode
 			:virtual_index
 		)
 		RETURNING 
-			application_id,
-			index,
-			first_block,
-			last_block,
-			claim_hash,
-			claim_transaction_hash,
-			status,
-			virtual_index,
 			created_at,
 			updated_at
 	`
@@ -138,11 +131,17 @@ func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*mode
 	}
 	defer stmt.Close()
 
-	var inserted model.Epoch
+	type CreatedEpochMetadata struct {
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
+	}
+	var inserted CreatedEpochMetadata
+
 	err = stmt.GetContext(ctx, &inserted, epoch)
 	if err != nil {
 		return nil, err
 	}
-
-	return &inserted, nil
+	epoch.CreatedAt = inserted.CreatedAt
+	epoch.UpdatedAt = inserted.UpdatedAt
+	return epoch, nil
 }
