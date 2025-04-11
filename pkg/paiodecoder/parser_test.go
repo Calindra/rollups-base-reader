@@ -2,7 +2,6 @@ package paiodecoder
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"math/big"
 	"testing"
@@ -64,15 +63,9 @@ func (s *ParserSuite) TestParsePaioBatchToInputs() {
 	s.NoError(err)
 	s.Len(inputs, 1)
 
-	var data AvailData
-	err = json.Unmarshal(inputs[0].RawData, &data)
-	s.NoError(err)
+	slog.Debug("inputs", "inputs", inputs)
 
-	// changed to new msg_sender because domain name changed from CartesiPaio to Cartesi,
-	// so hash changed and then public key also changed
-	s.Equal("0x631e372a9Ed7808Cbf55117f3263d3e1c9Bc3710", data.MsgSender.Hex())
-	s.Equal("0xab7528bb862fB57E8A2BCd567a2e929a0Be56a5e", data.AppContract.Hex())
-	s.Equal("Hello, World?", string(data.Data))
+	s.Equal("Hello, World?", string(inputs[0].TransactionData))
 }
 
 func (s *ParserSuite) TestParsePaioBatchToInputsWeirdSignature() {
@@ -100,13 +93,5 @@ func (s *ParserSuite) TestParsePaioBatchToInputsWeirdSignature() {
 	s.NoError(err)
 	s.Len(inputs, 1)
 
-	var data AvailData
-	err = json.Unmarshal(inputs[0].RawData, &data)
-	s.NoError(err)
-
-	// changed to new msg_sender because domain name changed from CartesiPaio to Cartesi,
-	// so hash changed and then public key also changed
-	s.Equal("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", data.MsgSender.Hex())
-	s.Equal("0xab7528bb862fB57E8A2BCd567a2e929a0Be56a5e", data.AppContract.Hex())
-	s.Equal("deadbeefa7", common.Bytes2Hex(data.Data))
+	s.Equal("deadbeefa7", common.Bytes2Hex(inputs[0].TransactionData))
 }

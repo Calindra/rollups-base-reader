@@ -35,7 +35,7 @@ func (s *FoundryTestContainerSuite) TearDownTest() {
 func (s *FoundryTestContainerSuite) TestFoundryContainer() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()
-	container, err := SetupFoundryNightly(ctx, testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}))
+	container, err := SetupFoundryStable(ctx, testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}))
 	s.container = container
 	s.Require().NoError(err)
 	s.NotNil(container)

@@ -26,6 +26,7 @@ type InputRepositoryInterface interface {
 		filter []*cModel.ConvenienceFilter,
 	) (*commons.PageResult[model.Input], error)
 	Count(ctx context.Context, filter []*cModel.ConvenienceFilter) (uint64, error)
+	CountMap(ctx context.Context) (map[int64]uint64, error)
 }
 
 type InputRepository struct {
@@ -92,6 +93,37 @@ func transformToInputQuery(
 	return query, args, count, nil
 }
 
+func (i *InputRepository) CountMap(ctx context.Context) (map[int64]uint64, error) {
+	mapAddress := make(map[int64]uint64)
+
+	type InputCount struct {
+		AppID int64  `db:"epoch_application_id"`
+		Count uint64 `db:"counter"`
+	}
+
+	inputCounter := []InputCount{}
+
+	query := `SELECT epoch_application_id, count(*) as counter FROM input GROUP BY epoch_application_id`
+	stmt, err := i.Db.PreparexContext(ctx, query)
+	if err != nil {
+		slog.Error("CountMap prepare error")
+		return nil, err
+	}
+	defer stmt.Close()
+
+	err = stmt.SelectContext(ctx, &inputCounter)
+	if err != nil {
+		slog.Error("CountMap execution error")
+		return nil, err
+	}
+
+	for _, input := range inputCounter {
+		mapAddress[input.AppID] = input.Count
+	}
+
+	return mapAddress, nil
+}
+
 func (i *InputRepository) Count(
 	ctx context.Context,
 	filter []*cModel.ConvenienceFilter,
@@ -127,20 +159,27 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		block_number,
 		raw_data,
 		status,
-		machine_hash,
-		outputs_hash,
 		transaction_reference,
 		snapshot_uri
-	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
-	args := []any{input.EpochApplicationID, input.EpochIndex, input.Index, input.BlockNumber, input.RawData, input.Status, input.MachineHash, input.OutputsHash, input.TransactionReference, input.SnapshotURI}
+	) VALUES ($1, $2, $3, $4, $5, $6, decode($7, 'hex'), $8)`
+	args := []any{
+		input.EpochApplicationID,
+		input.EpochIndex,
+		input.Index,
+		input.BlockNumber,
+		input.RawData,
+		input.Status,
+		input.TransactionReference.Hex()[2:],
+		input.SnapshotURI,
+	}
 
 	// Check if the transaction is already started
 	tx, err := util.NewTx(ctx, i.Db)
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	// Rollback the transaction if there is an error
-	defer tx.Rollback()
+	// // Rollback the transaction if there is an error
+	// defer tx.Rollback()
 
 	// Create a prepared statement in transaction
 	stmt, err := tx.PreparexContext(ctx, query)
@@ -156,9 +195,9 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 	}
 
 	// Commit the transaction
-	if commitErr := tx.Commit(); commitErr != nil {
-		return fmt.Errorf("error committing transaction: %w", commitErr)
-	}
+	// if commitErr := tx.Commit(); commitErr != nil {
+	// 	return fmt.Errorf("error committing transaction: %w", commitErr)
+	// }
 
 	return nil
 }

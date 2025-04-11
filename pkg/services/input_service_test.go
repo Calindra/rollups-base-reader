@@ -20,6 +20,11 @@ type MockInputRepository struct {
 	mock.Mock
 }
 
+// CountMap implements repository.InputRepositoryInterface.
+func (m *MockInputRepository) CountMap(ctx context.Context) (map[int64]uint64, error) {
+	panic("unimplemented")
+}
+
 // Count implements repository.InputRepositoryInterface.
 func (m *MockInputRepository) Count(ctx context.Context, filter []*cModel.ConvenienceFilter) (uint64, error) {
 	panic("unimplemented")
@@ -48,6 +53,11 @@ type MockEpochRepository struct {
 	mock.Mock
 }
 
+// Create implements repository.EpochRepositoryInterface.
+func (m *MockEpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
+	panic("unimplemented")
+}
+
 // FindOne implements repository.EpochRepositoryInterface.
 func (m *MockEpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epoch, error) {
 	panic("unimplemented")
@@ -64,6 +74,11 @@ func (m *MockEpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, app
 
 type MockAppRepository struct {
 	mock.Mock
+}
+
+// FindOneByID implements repository.AppRepositoryInterface.
+func (m *MockAppRepository) FindOneByID(ctx context.Context, id int64) (*model.Application, error) {
+	panic("unimplemented")
 }
 
 // FindAllByDA implements repository.AppRepositoryInterface.
@@ -144,7 +159,7 @@ func (is *InputServiceTestSuite) TestCreateInputID() {
 	is.mockEpochRepo.On("GetLatestOpenEpochByAppID", appID).Return(mockEpoch, nil)
 	is.mockInputRepo.On("Create", updatedInput).Return(nil)
 
-	err := is.service.CreateInput(ctx,  input)
+	err := is.service.CreateInput(ctx, input)
 
 	is.NoError(err)
 	is.mockEpochRepo.AssertCalled(is.T(), "GetLatestOpenEpochByAppID", appID)

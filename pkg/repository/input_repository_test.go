@@ -13,6 +13,7 @@ import (
 	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
@@ -85,15 +86,16 @@ func (s *InputRepositorySuite) TearDownTest() {
 
 func (s *InputRepositorySuite) TestInputRepository() {
 	input := model.Input{
-		EpochApplicationID: 1,                 // existing app
-		EpochIndex:         commons.OpenEpoch, // add to actual epoch
-		Index:              171,               // unique index
-		BlockNumber:        0,
-		RawData:            []byte("test data"),
-		Status:             model.InputCompletionStatus_Accepted,
+		EpochApplicationID:   1,                 // existing app
+		EpochIndex:           commons.OpenEpoch, // add to actual epoch
+		Index:                171,               // unique index
+		BlockNumber:          0,
+		RawData:              []byte("test data"),
+		Status:               model.InputCompletionStatus_Accepted,
+		TransactionReference: &common.MaxHash,
 	}
 	err := s.inputRepository.Create(s.ctx, input)
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	inputDb, err := s.inputRepository.FindOne(s.ctx, input.EpochApplicationID, input.Index)
 	s.NoError(err)
@@ -351,4 +353,35 @@ func (s *InputRepositorySuite) TestFindAllInputsLimitOffset() {
 	s.NoError(err)
 	s.Len(inputs.Rows, 2)
 	s.Equal(int(input1.Index), int(inputs.Rows[0].Index))
+}
+
+func (s *InputRepositorySuite) TestCountMap() {
+	ctx, ctxCancel := context.WithCancel(s.ctx)
+	defer ctxCancel()
+	// Insert test data
+	input1 := model.Input{
+		EpochApplicationID: 1,
+		EpochIndex:         commons.OpenEpoch,
+		Index:              171,
+		BlockNumber:        0,
+		RawData:            []byte("test data 1"),
+		Status:             model.InputCompletionStatus_Accepted,
+	}
+	input2 := model.Input{
+		EpochApplicationID: 1,
+		EpochIndex:         commons.OpenEpoch,
+		Index:              172,
+		BlockNumber:        0,
+		RawData:            []byte("test data 2"),
+		Status:             model.InputCompletionStatus_Rejected,
+	}
+	err := s.inputRepository.Create(s.ctx, input1)
+	s.NoError(err)
+	err = s.inputRepository.Create(s.ctx, input2)
+	s.NoError(err)
+
+	dataMap, err := s.inputRepository.CountMap(ctx)
+	s.NoError(err)
+	s.Len(dataMap, 1)
+	s.Equal(103, int(dataMap[1]))
 }
