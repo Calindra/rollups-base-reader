@@ -161,17 +161,19 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		status,
 		transaction_reference,
 		snapshot_uri
-	) VALUES ($1, $2, $3, $4, $5, $6, decode($7, 'hex'), $8)`
-	args := []any{
+	) VALUES (`
+	keys, args := util.PrepareKeyArguments(
 		input.EpochApplicationID,
 		input.EpochIndex,
 		input.Index,
 		input.BlockNumber,
 		input.RawData,
 		input.Status,
-		input.TransactionReference.Hex()[2:],
+		input.TransactionReference,
 		input.SnapshotURI,
-	}
+	)
+	query += strings.Join(keys, ", ") + `)`
+	slog.Debug("Query", "query", query, "args", args)
 
 	dbExec := util.NewDBExecutor(i.Db)
 
