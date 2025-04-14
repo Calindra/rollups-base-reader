@@ -22,6 +22,9 @@ type DBExecutor struct {
 	db *sqlx.DB
 }
 
+type DBTransactor interface {
+	StartTransaction(ctx context.Context) (context.Context, *sqlx.Tx, error)
+}
 
 func NewDBExecutor(db *sqlx.DB) DBExecutorInterface {
 	return &DBExecutor{db: db}
@@ -67,4 +70,14 @@ func GetTransaction(ctx context.Context) (*sqlx.Tx, bool) {
 		return nil, false
 	}
 	return tx, true
+}
+
+func CloseConnect(db *sqlx.DB) error {
+	if db != nil {
+		err := db.Close()
+		if err != nil {
+			return fmt.Errorf("error closing database connection: %w", err)
+		}
+	}
+	return nil
 }

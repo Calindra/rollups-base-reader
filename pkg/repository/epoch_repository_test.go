@@ -22,8 +22,8 @@ import (
 
 type EpochRepositorySuite struct {
 	suite.Suite
-	appRepository   *AppRepository
-	epochRepository *EpochRepository
+	appRepository   AppRepositoryInterface
+	epochRepository EpochRepositoryInterface
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
 	image           *postgres.PostgresContainer
@@ -80,7 +80,7 @@ func (s *EpochRepositorySuite) SetupTest() {
 
 func (s *EpochRepositorySuite) TearDownTest() {
 	testcontainers.CleanupContainer(s.T(), s.image.Container)
-	s.epochRepository.Db.Close()
+	s.epochRepository.Close()
 	s.ctxCancel()
 }
 

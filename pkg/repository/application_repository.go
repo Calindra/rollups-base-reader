@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
@@ -17,13 +18,19 @@ type AppRepositoryInterface interface {
 	FindAllByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error)
 	UpdateDA(ctx context.Context, applicationId int64, da model.DataAvailabilitySelector) error
 	List(ctx context.Context) ([]model.Application, error)
+	io.Closer
 }
 
 type AppRepository struct {
 	Db *sqlx.DB
 }
 
-func NewAppRepository(db *sqlx.DB) *AppRepository {
+// Close implements AppRepositoryInterface.
+func (a *AppRepository) Close() error {
+	return commons.CloseConnect(a.Db)
+}
+
+func NewAppRepository(db *sqlx.DB) AppRepositoryInterface {
 	return &AppRepository{db}
 }
 

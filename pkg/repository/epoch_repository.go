@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"io"
 	"time"
 
+	"github.com/calindra/rollups-base-reader/pkg/commons"
 	util "github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
@@ -15,13 +17,19 @@ type EpochRepositoryInterface interface {
 	GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error)
 	FindOne(ctx context.Context, index uint64) (*model.Epoch, error)
 	Create(ctx context.Context, epoch model.Epoch) (*model.Epoch, error)
+	io.Closer
 }
 
 type EpochRepository struct {
 	Db *sqlx.DB
 }
 
-func NewEpochRepository(db *sqlx.DB) *EpochRepository {
+// Close implements EpochRepositoryInterface.
+func (e *EpochRepository) Close() error {
+	return commons.CloseConnect(e.Db)
+}
+
+func NewEpochRepository(db *sqlx.DB) EpochRepositoryInterface {
 	return &EpochRepository{db}
 }
 

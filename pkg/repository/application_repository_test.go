@@ -21,7 +21,7 @@ import (
 
 type AppRepositorySuite struct {
 	suite.Suite
-	appRepository *AppRepository
+	appRepository AppRepositoryInterface
 	ctx           context.Context
 	ctxCancel     context.CancelFunc
 	image         *postgres.PostgresContainer
@@ -77,7 +77,7 @@ func (s *AppRepositorySuite) SetupTest() {
 
 func (s *AppRepositorySuite) TearDownTest() {
 	testcontainers.CleanupContainer(s.T(), s.image.Container)
-	s.appRepository.Db.Close()
+	s.appRepository.Close()
 	s.ctxCancel()
 }
 

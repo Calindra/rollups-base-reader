@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 
@@ -27,13 +28,19 @@ type InputRepositoryInterface interface {
 	) (*commons.PageResult[model.Input], error)
 	Count(ctx context.Context, filter []*cModel.ConvenienceFilter) (uint64, error)
 	CountMap(ctx context.Context) (map[int64]uint64, error)
+	io.Closer
 }
 
 type InputRepository struct {
 	Db *sqlx.DB
 }
 
-func NewInputRepository(db *sqlx.DB) *InputRepository {
+// Close implements InputRepositoryInterface.
+func (i *InputRepository) Close() error {
+	return util.CloseConnect(i.Db)
+}
+
+func NewInputRepository(db *sqlx.DB) InputRepositoryInterface {
 	return &InputRepository{db}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/cartesi/rollups-graphql/pkg/commons"
 	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
@@ -18,6 +19,16 @@ import (
 
 type MockInputRepository struct {
 	mock.Mock
+}
+
+// Close implements repository.InputRepositoryInterface.
+func (m *MockInputRepository) Close() error {
+	panic("unimplemented")
+}
+
+// StartTransaction implements repository.InputRepositoryInterface.
+func (m *MockInputRepository) StartTransaction(ctx context.Context) (context.Context, *sqlx.Tx, error) {
+	panic("unimplemented")
 }
 
 // CountMap implements repository.InputRepositoryInterface.
@@ -53,6 +64,16 @@ type MockEpochRepository struct {
 	mock.Mock
 }
 
+// Close implements repository.EpochRepositoryInterface.
+func (m *MockEpochRepository) Close() error {
+	panic("unimplemented")
+}
+
+// StartTransaction implements repository.EpochRepositoryInterface.
+func (m *MockEpochRepository) StartTransaction(ctx context.Context) (context.Context, *sqlx.Tx, error) {
+	panic("unimplemented")
+}
+
 // Create implements repository.EpochRepositoryInterface.
 func (m *MockEpochRepository) Create(ctx context.Context, epoch model.Epoch) (*model.Epoch, error) {
 	args := m.Called(mock.Anything)
@@ -82,6 +103,16 @@ func (m *MockEpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, app
 
 type MockAppRepository struct {
 	mock.Mock
+}
+
+// Close implements repository.AppRepositoryInterface.
+func (m *MockAppRepository) Close() error {
+	panic("unimplemented")
+}
+
+// StartTransaction implements repository.AppRepositoryInterface.
+func (m *MockAppRepository) StartTransaction(ctx context.Context) (context.Context, *sqlx.Tx, error) {
+	panic("unimplemented")
 }
 
 // FindOneByID implements repository.AppRepositoryInterface.
