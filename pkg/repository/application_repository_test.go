@@ -81,6 +81,13 @@ func (s *AppRepositorySuite) TearDownTest() {
 	s.ctxCancel()
 }
 
+func (s *AppRepositorySuite) TearDownSuite() {
+	// Remove schema
+	parentPath := filepath.Dir(s.schemaPath)
+	err := os.RemoveAll(parentPath)
+	s.NoError(err)
+}
+
 func (s *AppRepositorySuite) TestList() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()

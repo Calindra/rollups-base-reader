@@ -83,6 +83,13 @@ func (s *InputRepositorySuite) TearDownTest() {
 	s.ctxCancel()
 }
 
+func (s *InputRepositorySuite) TearDownSuite() {
+	// Remove schema
+	parentPath := filepath.Dir(s.schemaPath)
+	err := os.RemoveAll(parentPath)
+	s.NoError(err)
+}
+
 func (s *InputRepositorySuite) TestInputRepository() {
 	input := model.Input{
 		EpochApplicationID:   1,                 // existing app

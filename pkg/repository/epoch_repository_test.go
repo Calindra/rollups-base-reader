@@ -84,6 +84,13 @@ func (s *EpochRepositorySuite) TearDownTest() {
 	s.ctxCancel()
 }
 
+func (s *EpochRepositorySuite) TearDownSuite() {
+	// Remove schema
+	parentPath := filepath.Dir(s.schemaPath)
+	err := os.RemoveAll(parentPath)
+	s.NoError(err)
+}
+
 func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppID() {
 	ctx, ctxCancel := context.WithCancel(s.ctx)
 	defer ctxCancel()
