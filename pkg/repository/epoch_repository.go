@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
-	util "github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -131,7 +130,7 @@ func (e *EpochRepository) Create(ctx context.Context, epoch model.Epoch) (*model
 			updated_at
 	`
 
-	dbExec := util.NewDBExecutor(e.Db)
+	dbExec := commons.NewDBExecutor(e.Db)
 
 	stmt, err := dbExec.PrepareNamedContext(ctx, query)
 	if err != nil {
