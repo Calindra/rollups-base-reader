@@ -2,8 +2,6 @@ module github.com/calindra/rollups-base-reader
 
 go 1.24.2
 
-toolchain go1.23.7
-
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 require (
