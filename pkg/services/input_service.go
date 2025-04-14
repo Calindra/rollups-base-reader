@@ -5,21 +5,56 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 
+	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/calindra/rollups-base-reader/pkg/repository"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/jmoiron/sqlx"
 )
 
 type InputService struct {
+	db              *sqlx.DB
 	AppRepository   repository.AppRepositoryInterface
 	InputRepository repository.InputRepositoryInterface
 	EpochRepository repository.EpochRepositoryInterface
 }
 
-func NewInputService(inputRepository repository.InputRepositoryInterface, epochRepository repository.EpochRepositoryInterface, appRepository repository.AppRepositoryInterface) *InputService {
+// StartTransaction implements InputServiceInterface.
+func (s *InputService) StartTransaction(ctx context.Context) (context.Context, *sqlx.Tx, error) {
+	return commons.StartTransaction(ctx, s.db)
+}
+
+// Close implements InputServiceInterface.
+func (s *InputService) Close() error {
+	var err error
+	err = s.AppRepository.Close()
+	if err != nil {
+		return err
+	}
+	err = s.InputRepository.Close()
+	if err != nil {
+		return err
+	}
+	return s.EpochRepository.Close()
+}
+
+type InputServiceInterface interface {
+	CreateInput(ctx context.Context, input model.Input) error
+	CreateInputWithAddress(ctx context.Context, appContract common.Address, input model.Input) error
+	commons.DBTransactor
+	io.Closer
+}
+
+func NewInputService(db *sqlx.DB) InputServiceInterface {
+	inputRepository := repository.NewInputRepository(db)
+	epochRepository := repository.NewEpochRepository(db)
+	appRepository := repository.NewAppRepository(db)
+
 	return &InputService{
+		db:              db,
 		InputRepository: inputRepository,
 		EpochRepository: epochRepository,
 		AppRepository:   appRepository,

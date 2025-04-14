@@ -23,7 +23,7 @@ type MockInputRepository struct {
 
 // Close implements repository.InputRepositoryInterface.
 func (m *MockInputRepository) Close() error {
-	panic("unimplemented")
+	return nil
 }
 
 // StartTransaction implements repository.InputRepositoryInterface.
@@ -66,7 +66,7 @@ type MockEpochRepository struct {
 
 // Close implements repository.EpochRepositoryInterface.
 func (m *MockEpochRepository) Close() error {
-	panic("unimplemented")
+	return nil
 }
 
 // StartTransaction implements repository.EpochRepositoryInterface.
@@ -107,7 +107,7 @@ type MockAppRepository struct {
 
 // Close implements repository.AppRepositoryInterface.
 func (m *MockAppRepository) Close() error {
-	panic("unimplemented")
+	return nil
 }
 
 // StartTransaction implements repository.AppRepositoryInterface.
@@ -161,7 +161,7 @@ type InputServiceTestSuite struct {
 	mockInputRepo *MockInputRepository
 	mockEpochRepo *MockEpochRepository
 	mockAppRepo   *MockAppRepository
-	service       *InputService
+	service       InputServiceInterface
 	ctx           context.Context
 	ctxCancel     context.CancelFunc
 }
@@ -177,10 +177,15 @@ func (is *InputServiceTestSuite) SetupTest() {
 	is.mockEpochRepo = new(MockEpochRepository)
 	is.mockAppRepo = new(MockAppRepository)
 
-	is.service = NewInputService(is.mockInputRepo, is.mockEpochRepo, is.mockAppRepo)
+	is.service = NewInputService(nil)
+	is.service.(*InputService).InputRepository = is.mockInputRepo
+	is.service.(*InputService).EpochRepository = is.mockEpochRepo
+	is.service.(*InputService).AppRepository = is.mockAppRepo
 }
 
 func (is *InputServiceTestSuite) TearDownTest() {
+	err := is.service.Close()
+	is.NoError(err)
 	is.ctxCancel()
 }
 
