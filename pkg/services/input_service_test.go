@@ -161,7 +161,7 @@ type InputServiceTestSuite struct {
 	mockInputRepo *MockInputRepository
 	mockEpochRepo *MockEpochRepository
 	mockAppRepo   *MockAppRepository
-	service       InputServiceInterface
+	service       *InputService
 	ctx           context.Context
 	ctxCancel     context.CancelFunc
 }
@@ -178,9 +178,9 @@ func (is *InputServiceTestSuite) SetupTest() {
 	is.mockAppRepo = new(MockAppRepository)
 
 	is.service = NewInputService(nil)
-	is.service.(*InputService).InputRepository = is.mockInputRepo
-	is.service.(*InputService).EpochRepository = is.mockEpochRepo
-	is.service.(*InputService).AppRepository = is.mockAppRepo
+	is.service.InputRepository = is.mockInputRepo
+	is.service.EpochRepository = is.mockEpochRepo
+	is.service.AppRepository = is.mockAppRepo
 }
 
 func (is *InputServiceTestSuite) TearDownTest() {

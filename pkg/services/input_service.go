@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
@@ -41,14 +40,7 @@ func (s *InputService) Close() error {
 	return s.EpochRepository.Close()
 }
 
-type InputServiceInterface interface {
-	CreateInput(ctx context.Context, input model.Input) error
-	CreateInputWithAddress(ctx context.Context, appContract common.Address, input model.Input) error
-	commons.DBTransactor
-	io.Closer
-}
-
-func NewInputService(db *sqlx.DB) InputServiceInterface {
+func NewInputService(db *sqlx.DB) *InputService {
 	inputRepository := repository.NewInputRepository(db)
 	epochRepository := repository.NewEpochRepository(db)
 	appRepository := repository.NewAppRepository(db)
