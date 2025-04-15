@@ -1,6 +1,6 @@
 {
   "name": "rollups-base-reader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
   "description": "This is base for changeset",
   "homepage": "https://github.com/Calindra/rollups-base-reader#readme",
