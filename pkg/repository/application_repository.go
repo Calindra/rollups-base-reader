@@ -16,7 +16,7 @@ type AppRepositoryInterface interface {
 	FindOneByContract(ctx context.Context, address common.Address) (*model.Application, error)
 	FindOneByID(ctx context.Context, id int64) (*model.Application, error)
 	FindAllByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error)
-	FindAllByDAStatus(ctx context.Context, da model.DataAvailabilitySelector, state model.ApplicationState) ([]model.Application, error)
+	FindAllByStatusAndDA(ctx context.Context, da model.DataAvailabilitySelector, state model.ApplicationState) ([]model.Application, error)
 	UpdateDA(ctx context.Context, applicationId int64, da model.DataAvailabilitySelector) error
 	List(ctx context.Context) ([]model.Application, error)
 	io.Closer
@@ -26,8 +26,8 @@ type AppRepository struct {
 	Db *sqlx.DB
 }
 
-// FindAllByDAStatus implements AppRepositoryInterface.
-func (a *AppRepository) FindAllByDAStatus(ctx context.Context, da model.DataAvailabilitySelector, state model.ApplicationState) ([]model.Application, error) {
+// FindAllByStatusAndDA implements AppRepositoryInterface.
+func (a *AppRepository) FindAllByStatusAndDA(ctx context.Context, da model.DataAvailabilitySelector, state model.ApplicationState) ([]model.Application, error) {
 	query := `SELECT *
 	FROM application
 	WHERE data_availability = decode($1, 'hex') AND state = $2`

@@ -105,8 +105,8 @@ type MockAppRepository struct {
 	mock.Mock
 }
 
-// FindAllByDAStatus implements repository.AppRepositoryInterface.
-func (m *MockAppRepository) FindAllByDAStatus(ctx context.Context, da model.DataAvailabilitySelector, status model.ApplicationState) ([]model.Application, error) {
+// FindAllByStatusAndDA implements repository.AppRepositoryInterface.
+func (m *MockAppRepository) FindAllByStatusAndDA(ctx context.Context, da model.DataAvailabilitySelector, status model.ApplicationState) ([]model.Application, error) {
 	panic("unimplemented")
 }
 

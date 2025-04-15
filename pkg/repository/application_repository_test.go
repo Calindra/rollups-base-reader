@@ -161,7 +161,7 @@ func (s *AppRepositorySuite) TestFindByDAStatus() {
 
 	// Call FindByDA with InputBox DA selector
 	active := model.ApplicationState_Enabled
-	apps, err := s.appRepository.FindAllByDAStatus(
+	apps, err := s.appRepository.FindAllByStatusAndDA(
 		ctx,
 		model.DataAvailability_InputBox,
 		active,
@@ -181,13 +181,13 @@ func (s *AppRepositorySuite) TestFindByDAStatus() {
 	customDA := model.DataAvailabilitySelector{0xa1, 0xb2, 0xc3, 0xd4}
 
 	// Query with the custom selector (which likely doesn't exist in the DB)
-	customApps, err := s.appRepository.FindAllByDAStatus(ctx, customDA, active)
+	customApps, err := s.appRepository.FindAllByStatusAndDA(ctx, customDA, active)
 	s.NoError(err)
 	s.Empty(customApps, "Should not find any application with custom data availability")
 
 	// Check if any app is disabled
 	disabled := model.ApplicationState_Disabled
-	apps, err = s.appRepository.FindAllByDAStatus(
+	apps, err = s.appRepository.FindAllByStatusAndDA(
 		ctx,
 		model.DataAvailability_InputBox,
 		disabled,
