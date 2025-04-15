@@ -16,6 +16,7 @@ type AppRepositoryInterface interface {
 	FindOneByContract(ctx context.Context, address common.Address) (*model.Application, error)
 	FindOneByID(ctx context.Context, id int64) (*model.Application, error)
 	FindAllByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error)
+	FindAllByDAStatus(ctx context.Context, da model.DataAvailabilitySelector, status model.ApplicationState) ([]model.Application, error)
 	UpdateDA(ctx context.Context, applicationId int64, da model.DataAvailabilitySelector) error
 	List(ctx context.Context) ([]model.Application, error)
 	io.Closer
@@ -23,6 +24,32 @@ type AppRepositoryInterface interface {
 
 type AppRepository struct {
 	Db *sqlx.DB
+}
+
+// FindAllByDAStatus implements AppRepositoryInterface.
+func (a *AppRepository) FindAllByDAStatus(ctx context.Context, da model.DataAvailabilitySelector, status model.ApplicationState) ([]model.Application, error) {
+	query := `SELECT *
+	FROM application
+	WHERE data_availability = decode($1, 'hex') AND status = $2`
+	daHex := common.Bytes2Hex(da[:])
+	args := []any{daHex, status}
+	apps := []model.Application{}
+
+	slog.Debug("querying applications with data availability", "query", query, "args", args)
+	// Create a prepared statement
+	stmt, err := a.Db.PreparexContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing application query: %w", err)
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	err = stmt.SelectContext(ctx, &apps, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error querying applications with data availability: %w", err)
+	}
+
+	return apps, nil
 }
 
 // Close implements AppRepositoryInterface.
