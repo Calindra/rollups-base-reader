@@ -38,7 +38,9 @@ func (s *AnvilSuite) SetupTest() {
 
 func (s *AnvilSuite) TearDownTest() {
 	s.ctxCancel()
-	exec.Command("pkill", "-f", "anvil").Run()
+	if err := exec.Command("pkill", "-f", "anvil").Run(); err != nil {
+		slog.Error("failed to stop anvil", "error", err)
+	}
 }
 
 const testTimeout = 30 * time.Second
