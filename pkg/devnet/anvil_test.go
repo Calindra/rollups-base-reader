@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -28,7 +29,7 @@ type AnvilSuite struct {
 //
 
 func TestAnvilSuite(t *testing.T) {
-	suite.Run(t, &AnvilSuite{})
+	suite.Run(t, new(AnvilSuite))
 }
 
 func (s *AnvilSuite) SetupTest() {
@@ -37,6 +38,7 @@ func (s *AnvilSuite) SetupTest() {
 
 func (s *AnvilSuite) TearDownTest() {
 	s.ctxCancel()
+	exec.Command("pkill", "-f", "anvil").Run()
 }
 
 const testTimeout = 30 * time.Second
@@ -81,16 +83,21 @@ func (s *AnvilSuite) TestAnvilWorker() {
 	// read input
 	events, err := GetInputAdded(ctx, rpcUrl)
 	s.NoError(err)
-	s.Equal(1, len(events))
+	s.Len( events, 1)
 
 	// check input
 	abi, err := contracts.InputsMetaData.GetAbi()
 	s.NoError(err)
-
-	values, err := abi.Methods["EvmAdvance"].Inputs.UnpackValues(events[0].Input[4:])
+	firstEvent := events[0]
+	// Method EvmAdvance
+	methodABI, err := abi.MethodById(firstEvent.Input)
+	s.NoError(err)
+	values := make(map[string]any)
+	err = methodABI.Inputs.UnpackIntoMap(values, firstEvent.Input[4:])
 	s.NoError(err)
 
-	receivedPayload := values[7].([]byte)
+	receivedPayload, ok := values["payload"].([]byte)
+	s.True(ok)
 
 	s.Equal(payload, receivedPayload)
 
