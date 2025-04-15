@@ -5,9 +5,11 @@ package devnet
 
 import (
 	"context"
-	_ "embed"
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/fs"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -31,8 +33,8 @@ const (
 //go:embed anvil_state.json
 var devnetState []byte
 
-//go:embed localhost.json
-var localhost []byte
+//go:embed deployments/*.json
+var bundleContracts embed.FS
 
 const stateFileName = "anvil_state.json"
 
@@ -49,9 +51,8 @@ type AnvilWorker struct {
 
 // Define a struct to represent the structure of your JSON data
 type ContractInfo struct {
-	Contracts map[string]struct {
-		Address string `json:"address"`
-	} `json:"contracts"`
+	ContractName string `json:"contractName"`
+	Address      string `json:"address"`
 }
 
 func (w AnvilWorker) String() string {
@@ -92,37 +93,88 @@ func CheckAnvilAndInstall(ctx context.Context) (string, error) {
 	return location, nil
 }
 
-func GetContractInfo() *ContractInfo {
-	var contracts ContractInfo
-	if err := json.Unmarshal(localhost, &contracts); err != nil {
-		slog.Warn("anvil: failed to unmarshal localhost.json", "error", err)
+func GetContractInfo() ([]ContractInfo, error) {
+	contracts := []ContractInfo{}
+
+	// Read the JSON file
+	err := fs.WalkDir(bundleContracts, ".", func(path string, d fs.DirEntry, err error) error {
+		var contract ContractInfo
+
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != ".json" {
+			return nil
+		}
+
+		content, err := fs.ReadFile(bundleContracts, path)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(content, &contract); err != nil {
+			return fmt.Errorf("anvil: failed to unmarshal %s", path)
+		}
+
+		// Add the contract to the list if it is a Cartesi Rollups contract
+		if strings.HasPrefix(filepath.Base(path), "cartesiRollups") {
+			contracts = append(contracts, contract)
+		}
+
 		return nil
-	}
-	return &contracts
+	})
+
+	return contracts, err
 }
 
-func ShowAddresses() {
-	contracts := GetContractInfo()
-	var names []string
-	for name := range contracts.Contracts {
-		names = append(names, name)
+func writeLine(writer io.WriteCloser, firstColumn, SecondColumn string) error {
+	_, err := writer.Write(fmt.Appendf(nil, "%-28s %s\n", firstColumn, SecondColumn))
+	if err != nil {
+		return fmt.Errorf("anvil: failed to write line: %w", err)
 	}
-	names = append(names, ApplicationContractName)
-	contracts.Contracts[ApplicationContractName] = struct {
-		Address string "json:\"address\""
-	}{
-		Address: ApplicationAddress,
+	return nil
+}
+
+const nameSpace = 28
+const addressSpace = 42
+
+func writeHeaderLine(writer io.WriteCloser) error {
+	return writeLine(writer, strings.Repeat("─", nameSpace), strings.Repeat("─", addressSpace))
+}
+
+func ShowAddresses(writer io.WriteCloser) error {
+	defer writer.Close()
+	contracts, err := GetContractInfo()
+	if err != nil {
+		return err
 	}
-	sort.Strings(names)
-	space := 28
-	addressSpace := 42
-	fmt.Printf("%-28s %s\n", "Contract", "Address")
-	fmt.Printf("%-28s %s\n", strings.Repeat("─", space), strings.Repeat("─", addressSpace))
-	for _, name := range names {
-		if contract, ok := contracts.Contracts[name]; ok {
-			fmt.Printf("%-28s %s\n", name, contract.Address)
+	contracts = append(contracts, ContractInfo{
+		ContractName: "Application",
+		Address:      ApplicationAddress,
+	})
+
+	// Sort things
+	sort.Slice(contracts, func(i, j int) bool {
+		return contracts[i].ContractName < contracts[j].ContractName
+	})
+
+	if err := writeLine(writer, "Contract", "Address"); err != nil {
+		return err
+	}
+
+	if err := writeHeaderLine(writer); err != nil {
+		return err
+	}
+
+	for _, contract := range contracts {
+		if err := writeLine(writer, contract.ContractName, contract.Address); err != nil {
+			return err
 		}
 	}
+
+	return nil
 }
 
 func (w AnvilWorker) Start(ctx context.Context, ready chan<- struct{}) error {

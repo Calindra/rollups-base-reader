@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 
@@ -27,13 +28,19 @@ type InputRepositoryInterface interface {
 	) (*commons.PageResult[model.Input], error)
 	Count(ctx context.Context, filter []*cModel.ConvenienceFilter) (uint64, error)
 	CountMap(ctx context.Context) (map[int64]uint64, error)
+	io.Closer
 }
 
 type InputRepository struct {
 	Db *sqlx.DB
 }
 
-func NewInputRepository(db *sqlx.DB) *InputRepository {
+// Close implements InputRepositoryInterface.
+func (i *InputRepository) Close() error {
+	return util.CloseConnect(i.Db)
+}
+
+func NewInputRepository(db *sqlx.DB) InputRepositoryInterface {
 	return &InputRepository{db}
 }
 
@@ -161,42 +168,25 @@ func (i *InputRepository) Create(ctx context.Context, input model.Input) error {
 		status,
 		transaction_reference,
 		snapshot_uri
-	) VALUES ($1, $2, $3, $4, $5, $6, decode($7, 'hex'), $8)`
-	args := []any{
+	) VALUES (`
+	keys, args := util.PrepareKeyArguments(
 		input.EpochApplicationID,
 		input.EpochIndex,
 		input.Index,
 		input.BlockNumber,
 		input.RawData,
 		input.Status,
-		input.TransactionReference.Hex()[2:],
+		input.TransactionReference,
 		input.SnapshotURI,
-	}
+	)
+	query += strings.Join(keys, ", ") + `)`
+	slog.Debug("Query", "query", query, "args", args)
 
-	// Check if the transaction is already started
-	tx, err := util.NewTx(ctx, i.Db)
-	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
-	}
-	// Rollback the transaction if there is an error
-	defer tx.Rollback()
-
-	// Create a prepared statement in transaction
-	stmt, err := tx.PreparexContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("error preparing input query: %w", err)
-	}
-	defer stmt.Close()
+	dbExec := util.NewDBExecutor(i.Db)
 
 	// Execute the query
-	_, err = stmt.ExecContext(ctx, args...)
-	if err != nil {
+	if _, err := dbExec.ExecContext(ctx, query, args...); err != nil {
 		return fmt.Errorf("error writing input: %w", err)
-	}
-
-	// Commit the transaction
-	if commitErr := tx.Commit(); commitErr != nil {
-		return fmt.Errorf("error committing transaction: %w", commitErr)
 	}
 
 	return nil

@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"io"
 	"time"
 
+	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -13,14 +15,20 @@ import (
 type EpochRepositoryInterface interface {
 	GetLatestOpenEpochByAppID(ctx context.Context, appID int64) (*model.Epoch, error)
 	FindOne(ctx context.Context, index uint64) (*model.Epoch, error)
-	Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error)
+	Create(ctx context.Context, epoch model.Epoch) (*model.Epoch, error)
+	io.Closer
 }
 
 type EpochRepository struct {
 	Db *sqlx.DB
 }
 
-func NewEpochRepository(db *sqlx.DB) *EpochRepository {
+// Close implements EpochRepositoryInterface.
+func (e *EpochRepository) Close() error {
+	return commons.CloseConnect(e.Db)
+}
+
+func NewEpochRepository(db *sqlx.DB) EpochRepositoryInterface {
 	return &EpochRepository{db}
 }
 
@@ -52,9 +60,6 @@ func (e *EpochRepository) GetLatestOpenEpochByAppID(ctx context.Context, appID i
 
 	// Execute the query
 	err = stmt.GetContext(ctx, &epoch, args...)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +104,7 @@ func (e *EpochRepository) FindOne(ctx context.Context, index uint64) (*model.Epo
 	return &epoch, nil
 }
 
-func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*model.Epoch, error) {
+func (e *EpochRepository) Create(ctx context.Context, epoch model.Epoch) (*model.Epoch, error) {
 	query := `
 		INSERT INTO epoch (
 			application_id,
@@ -120,12 +125,14 @@ func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*mode
 			:status,
 			:virtual_index
 		)
-		RETURNING 
+		RETURNING
 			created_at,
 			updated_at
 	`
 
-	stmt, err := e.Db.PrepareNamedContext(ctx, query)
+	dbExec := commons.NewDBExecutor(e.Db)
+
+	stmt, err := dbExec.PrepareNamedContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -143,5 +150,5 @@ func (e *EpochRepository) Create(ctx context.Context, epoch *model.Epoch) (*mode
 	}
 	epoch.CreatedAt = inserted.CreatedAt
 	epoch.UpdatedAt = inserted.UpdatedAt
-	return epoch, nil
+	return &epoch, nil
 }

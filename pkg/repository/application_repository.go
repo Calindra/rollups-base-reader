@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/calindra/rollups-base-reader/pkg/commons"
@@ -17,13 +18,19 @@ type AppRepositoryInterface interface {
 	FindAllByDA(ctx context.Context, da model.DataAvailabilitySelector) ([]model.Application, error)
 	UpdateDA(ctx context.Context, applicationId int64, da model.DataAvailabilitySelector) error
 	List(ctx context.Context) ([]model.Application, error)
+	io.Closer
 }
 
 type AppRepository struct {
 	Db *sqlx.DB
 }
 
-func NewAppRepository(db *sqlx.DB) *AppRepository {
+// Close implements AppRepositoryInterface.
+func (a *AppRepository) Close() error {
+	return commons.CloseConnect(a.Db)
+}
+
+func NewAppRepository(db *sqlx.DB) AppRepositoryInterface {
 	return &AppRepository{db}
 }
 
@@ -118,29 +125,13 @@ func (a *AppRepository) UpdateDA(
 	daHex := common.Bytes2Hex(da[:])
 	args := []any{daHex, applicationId}
 
-	tx, err := commons.NewTx(ctx, a.Db)
-	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
-	}
-	defer tx.Rollback()
-
-	// Create a prepared statement
-	stmt, err := tx.PreparexContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("error preparing application update query: %w", err)
-	}
-	defer stmt.Close()
+	dbExec := commons.NewDBExecutor(a.Db)
 
 	// Execute the query
-	_, err = stmt.ExecContext(ctx, args...)
-	if err != nil {
+	if _, err := dbExec.ExecContext(ctx, query, args...); err != nil {
 		return fmt.Errorf("error updating application with ID %d: %w", applicationId, err)
 	}
 
-	// Commit the transaction
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("error committing transaction: %w", err)
-	}
 	slog.Debug("updated application data availability", "applicationId", applicationId, "dataAvailability", da)
 	return nil
 }

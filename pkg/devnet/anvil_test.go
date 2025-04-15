@@ -4,8 +4,12 @@
 package devnet
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log/slog"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -20,12 +24,23 @@ type AnvilSuite struct {
 	ctxCancel context.CancelFunc
 }
 
+//
+// Suite entry point
+//
+
+func TestAnvilSuite(t *testing.T) {
+	suite.Run(t, new(AnvilSuite))
+}
+
 func (s *AnvilSuite) SetupTest() {
 	s.ctx, s.ctxCancel = context.WithTimeout(context.Background(), testTimeout)
 }
 
 func (s *AnvilSuite) TearDownTest() {
 	s.ctxCancel()
+	if err := exec.Command("pkill", "-f", "anvil").Run(); err != nil {
+		slog.Error("failed to stop anvil", "error", err)
+	}
 }
 
 const testTimeout = 30 * time.Second
@@ -70,16 +85,21 @@ func (s *AnvilSuite) TestAnvilWorker() {
 	// read input
 	events, err := GetInputAdded(ctx, rpcUrl)
 	s.NoError(err)
-	s.Equal(1, len(events))
+	s.Len( events, 1)
 
 	// check input
 	abi, err := contracts.InputsMetaData.GetAbi()
 	s.NoError(err)
-
-	values, err := abi.Methods["EvmAdvance"].Inputs.UnpackValues(events[0].Input[4:])
+	firstEvent := events[0]
+	// Method EvmAdvance
+	methodABI, err := abi.MethodById(firstEvent.Input)
+	s.NoError(err)
+	values := make(map[string]any)
+	err = methodABI.Inputs.UnpackIntoMap(values, firstEvent.Input[4:])
 	s.NoError(err)
 
-	receivedPayload := values[7].([]byte)
+	receivedPayload, ok := values["payload"].([]byte)
+	s.True(ok)
 
 	s.Equal(payload, receivedPayload)
 
@@ -96,10 +116,27 @@ func (s *AnvilSuite) TestAnvilWorker() {
 	s.True(canceled)
 }
 
-//
-// Suite entry point
-//
+func (s *AnvilSuite) TestGetContract() {
+	contracts, err := GetContractInfo()
+	s.NoError(err)
+	s.NotEmpty(contracts)
+}
 
-func TestAnvilSuite(t *testing.T) {
-	suite.Run(t, &AnvilSuite{})
+type addressBook struct {
+	*bytes.Buffer
+}
+
+// Close implements io.WriteCloser.
+func (a *addressBook) Close() error {
+	return nil
+}
+
+var _ io.WriteCloser = (*addressBook)(nil)
+
+func (s *AnvilSuite) TestAddressbookContract() {
+	output := &addressBook{bytes.NewBufferString("")}
+	err := ShowAddresses(output)
+	s.NoError(err)
+	s.NotEmpty(output.String())
+	slog.Info("output", "output", output.String())
 }

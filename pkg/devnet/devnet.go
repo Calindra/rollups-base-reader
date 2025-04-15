@@ -4,18 +4,12 @@
 package devnet
 
 // Input box address in devnet.
-// v2.0.0-rc.10
-const InputBoxAddress = "0x593E5BCf894D6829Dd26D0810DA7F064406aebB6"
+// v2.0.0-rc.17
+const InputBoxAddress = "0xB6b39Fb3dD926A9e3FBc7A129540eEbeA3016a6c"
 
 const ApplicationContractName = "Application"
 
 // Application address in devnet.
-// sunodo v0.10.4
-// const ApplicationAddress = "0x70ac08179605AF2D9e75782b8DEcDD3c22aA4D0C"
-
-// sunodo v0.11.2
-// const ApplicationAddress = "0xab7528bb862fb57e8a2bcd567a2e929a0be56a5e"
-
 // nonodo
 const ApplicationAddress = "0x75135d8ADb7180640d29d822D9AD59E83E8695b2"
 

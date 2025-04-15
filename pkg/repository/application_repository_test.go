@@ -21,7 +21,7 @@ import (
 
 type AppRepositorySuite struct {
 	suite.Suite
-	appRepository *AppRepository
+	appRepository AppRepositoryInterface
 	ctx           context.Context
 	ctxCancel     context.CancelFunc
 	image         *postgres.PostgresContainer
@@ -60,7 +60,6 @@ func (s *AppRepositorySuite) SetupTest() {
 		postgres.WithDatabase(commons.DbName),
 		postgres.WithUsername(commons.DbUser),
 		postgres.WithPassword(commons.DbPassword),
-		testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}),
 	)
 	s.NoError(err)
 	extraArg := "sslmode=disable"
@@ -78,8 +77,15 @@ func (s *AppRepositorySuite) SetupTest() {
 
 func (s *AppRepositorySuite) TearDownTest() {
 	testcontainers.CleanupContainer(s.T(), s.image.Container)
-	s.appRepository.Db.Close()
+	s.appRepository.Close()
 	s.ctxCancel()
+}
+
+func (s *AppRepositorySuite) TearDownSuite() {
+	// Remove schema
+	parentPath := filepath.Dir(s.schemaPath)
+	err := os.RemoveAll(parentPath)
+	s.NoError(err)
 }
 
 func (s *AppRepositorySuite) TestList() {

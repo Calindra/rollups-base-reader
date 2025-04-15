@@ -7,19 +7,46 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/calindra/rollups-base-reader/pkg/repository"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/jmoiron/sqlx"
 )
 
 type InputService struct {
+	db              *sqlx.DB
 	AppRepository   repository.AppRepositoryInterface
 	InputRepository repository.InputRepositoryInterface
 	EpochRepository repository.EpochRepositoryInterface
 }
 
-func NewInputService(inputRepository repository.InputRepositoryInterface, epochRepository repository.EpochRepositoryInterface, appRepository repository.AppRepositoryInterface) *InputService {
+// StartTransaction implements InputServiceInterface.
+func (s *InputService) StartTransaction(ctx context.Context) (context.Context, *sqlx.Tx, error) {
+	return commons.StartTransaction(ctx, s.db)
+}
+
+// Close implements InputServiceInterface.
+func (s *InputService) Close() error {
+	var err error
+	err = s.AppRepository.Close()
+	if err != nil {
+		return err
+	}
+	err = s.InputRepository.Close()
+	if err != nil {
+		return err
+	}
+	return s.EpochRepository.Close()
+}
+
+func NewInputService(db *sqlx.DB) *InputService {
+	inputRepository := repository.NewInputRepository(db)
+	epochRepository := repository.NewEpochRepository(db)
+	appRepository := repository.NewAppRepository(db)
+
 	return &InputService{
+		db:              db,
 		InputRepository: inputRepository,
 		EpochRepository: epochRepository,
 		AppRepository:   appRepository,
@@ -30,11 +57,13 @@ func (s *InputService) CreateInput(ctx context.Context, input model.Input) error
 
 	// Get the latest open epoch for the app
 	latestEpoch, err := s.EpochRepository.GetLatestOpenEpochByAppID(ctx, appID)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("failed to find latest epoch for appID %d: %w", appID, err)
 	}
 
 	if latestEpoch == nil {
+		slog.Debug("No open epoch found, creating a new one")
+
 		app, err := s.AppRepository.FindOneByID(ctx, appID)
 		if err != nil {
 			return fmt.Errorf("failed to find the app %d: %w", appID, err)
@@ -47,7 +76,7 @@ func (s *InputService) CreateInput(ctx context.Context, input model.Input) error
 			Status:        model.EpochStatus_Open,
 			VirtualIndex:  0,
 		}
-		epochCreated, err := s.EpochRepository.Create(ctx, &epoch)
+		epochCreated, err := s.EpochRepository.Create(ctx, epoch)
 		if err != nil {
 			return fmt.Errorf("failed to create an epoch for the app %d: %w", appID, err)
 		}

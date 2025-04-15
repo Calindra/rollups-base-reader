@@ -56,9 +56,9 @@ type AnvilRelease struct {
 
 // GetVersion implements HandleRelease.
 func (a *AnvilRelease) GetVersion(ctx context.Context) (string, error) {
-	// lookup for the anvil version on environment or default as nightly
+	// lookup for the anvil version on environment or default as stable
 	// Same behavior of Foundryup
-	anvilTag := LATEST_TAG
+	anvilTag := STABLE_TAG
 	tag, ok := os.LookupEnv("ANVIL_TAG")
 	if ok {
 		anvilTag = tag
@@ -115,6 +115,7 @@ func HandleReleaseExecution(stdCtx context.Context, release HandleRelease) (stri
 const WINDOWS = "windows"
 const X86_64 = "amd64"
 const LATEST_TAG = "nightly"
+const STABLE_TAG = "stable"
 
 func NewAnvilRelease() HandleRelease {
 	return &AnvilRelease{
@@ -188,7 +189,7 @@ func (a AnvilRelease) TryLoadConfig() (*AnvilConfig, error) {
 }
 
 // FormatNameRelease implements HandleRelease.
-func (a AnvilRelease) FormatNameRelease(_, goos, goarch, _ string) string {
+func (a AnvilRelease) FormatNameRelease(prefix, goos, goarch, _ string) string {
 	ext := ".tar.gz"
 	myos := goos
 
@@ -196,7 +197,16 @@ func (a AnvilRelease) FormatNameRelease(_, goos, goarch, _ string) string {
 		ext = ".zip"
 		myos = "win32"
 	}
-	return "foundry_nightly_" + myos + "_" + goarch + ext
+	return "foundry_" + prefix + "_" + myos + "_" + goarch + ext
+}
+
+func (a AnvilRelease) GetPrefix() string {
+	version, _ := a.GetVersion(context.Background())
+	// check if version is nightly
+	if strings.HasPrefix(version, LATEST_TAG) {
+		return LATEST_TAG
+	}
+	return version
 }
 
 // PlatformCompatible implements HandleRelease.
@@ -205,10 +215,11 @@ func (a AnvilRelease) PlatformCompatible() (string, error) {
 	slog.Debug("anvil: System", "GOARCH:", runtime.GOARCH, "GOOS:", runtime.GOOS)
 	goarch := runtime.GOARCH
 	goos := runtime.GOOS
+	prefix := a.GetPrefix()
 
 	if (goarch == "amd64" && goos == WINDOWS) ||
 		((goarch == "amd64" || goarch == "arm64") && (goos == "linux" || goos == "darwin")) {
-		return a.FormatNameRelease("", goos, goarch, ""), nil
+		return a.FormatNameRelease(prefix, goos, goarch, ""), nil
 	}
 
 	return "", fmt.Errorf("anvil: platform not supported: os = %s; arch = %s", goarch, goos)
@@ -325,7 +336,7 @@ func (a *AnvilRelease) GetLatestReleaseCompatible(ctx context.Context) (*Release
 		// Show config
 		cfgStr, err := json.Marshal(config)
 		if err != nil {
-			slog.Debug("anvil:", "config", config)
+			slog.Debug("anvil:", "config", config, "error", err)
 		} else {
 			slog.Debug("anvil:", "config", string(cfgStr))
 		}

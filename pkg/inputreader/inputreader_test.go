@@ -29,7 +29,7 @@ import (
 
 type InputReaderTestSuite struct {
 	suite.Suite
-	appRepository *repository.AppRepository
+	appRepository repository.AppRepositoryInterface
 	ctx           context.Context
 	timeoutCancel context.CancelFunc
 	schemaPath string
@@ -100,7 +100,7 @@ func (s *InputReaderTestSuite) TearDownTest() {
 	testcontainers.CleanupContainer(s.T(), s.anvilC.Container)
 	testcontainers.CleanupContainer(s.T(), s.postgresC.Container)
 
-	s.appRepository.Db.Close()
+	s.appRepository.Close()
 	s.timeoutCancel()
 }
 

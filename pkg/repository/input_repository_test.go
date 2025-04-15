@@ -23,7 +23,7 @@ import (
 
 type InputRepositorySuite struct {
 	suite.Suite
-	inputRepository *InputRepository
+	inputRepository InputRepositoryInterface
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
 	image           *postgres.PostgresContainer
@@ -62,7 +62,6 @@ func (s *InputRepositorySuite) SetupTest() {
 		postgres.WithDatabase(commons.DbName),
 		postgres.WithUsername(commons.DbUser),
 		postgres.WithPassword(commons.DbPassword),
-		testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}),
 	)
 	s.NoError(err)
 	extraArg := "sslmode=disable"
@@ -80,8 +79,15 @@ func (s *InputRepositorySuite) SetupTest() {
 
 func (s *InputRepositorySuite) TearDownTest() {
 	testcontainers.CleanupContainer(s.T(), s.image.Container)
-	s.inputRepository.Db.Close()
+	s.inputRepository.Close()
 	s.ctxCancel()
+}
+
+func (s *InputRepositorySuite) TearDownSuite() {
+	// Remove schema
+	parentPath := filepath.Dir(s.schemaPath)
+	err := os.RemoveAll(parentPath)
+	s.NoError(err)
 }
 
 func (s *InputRepositorySuite) TestInputRepository() {

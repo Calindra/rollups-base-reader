@@ -128,7 +128,6 @@ func (w InputReaderWorker) FindAllInputsByBlockAndTimestampLT(
 					Status:               model.InputCompletionStatus_None,
 					EpochApplicationID:   -1,
 					EpochIndex:           0,
-					TransactionReference: Uint64ToHash(inputIndex),
 				},
 				BlockTimestamp:  unixTimestamp,
 				AppContract:     appContract,

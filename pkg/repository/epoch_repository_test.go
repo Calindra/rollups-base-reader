@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"io"
 	"log/slog"
 	"net/http"
@@ -21,8 +22,8 @@ import (
 
 type EpochRepositorySuite struct {
 	suite.Suite
-	appRepository   *AppRepository
-	epochRepository *EpochRepository
+	appRepository   AppRepositoryInterface
+	epochRepository EpochRepositoryInterface
 	ctx             context.Context
 	ctxCancel       context.CancelFunc
 	image           *postgres.PostgresContainer
@@ -61,7 +62,6 @@ func (s *EpochRepositorySuite) SetupTest() {
 		postgres.WithDatabase(commons.DbName),
 		postgres.WithUsername(commons.DbUser),
 		postgres.WithPassword(commons.DbPassword),
-		testcontainers.WithLogConsumers(&commons.StdoutLogConsumer{}),
 	)
 	s.NoError(err)
 	extraArg := "sslmode=disable"
@@ -80,8 +80,15 @@ func (s *EpochRepositorySuite) SetupTest() {
 
 func (s *EpochRepositorySuite) TearDownTest() {
 	testcontainers.CleanupContainer(s.T(), s.image.Container)
-	s.epochRepository.Db.Close()
+	s.epochRepository.Close()
 	s.ctxCancel()
+}
+
+func (s *EpochRepositorySuite) TearDownSuite() {
+	// Remove schema
+	parentPath := filepath.Dir(s.schemaPath)
+	err := os.RemoveAll(parentPath)
+	s.NoError(err)
 }
 
 func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppID() {
@@ -90,6 +97,7 @@ func (s *EpochRepositorySuite) TestGetLatestOpenEpochWrongByAppID() {
 	appID := int64(999)
 	_, err := s.epochRepository.GetLatestOpenEpochByAppID(ctx, appID)
 	s.Error(err)
+	s.Equal(sql.ErrNoRows, err)
 }
 
 func (s *EpochRepositorySuite) TestGetLatestOpenEpochByAppID() {
@@ -119,4 +127,21 @@ func (s *EpochRepositorySuite) TestFindOne() {
 	s.NotNil(epoch)
 	s.Equal(18, int(epoch.Index))
 	s.Equal(model.EpochStatus_ClaimComputed, epoch.Status)
+}
+
+func (s *EpochRepositorySuite) TestEpochRepositoryCreate() {
+	ctx, ctxCancel := context.WithCancel(s.ctx)
+	defer ctxCancel()
+	epoch := model.Epoch{
+		Index:         100,
+		FirstBlock:    100,
+		LastBlock:     200,
+		Status:        model.EpochStatus_Open,
+		VirtualIndex:  100,
+		ApplicationID: 1,
+	}
+	epochUpdated, err := s.epochRepository.Create(ctx, epoch)
+	s.NoError(err)
+	s.NotNil(epochUpdated.UpdatedAt)
+	s.NotNil(epochUpdated.CreatedAt)
 }
