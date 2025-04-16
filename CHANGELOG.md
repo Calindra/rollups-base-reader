@@ -1,5 +1,11 @@
 # rollups-base-reader
 
+## 0.0.3
+
+### Patch Changes
+
+- 0894cdb: Add method to app repository find all dapps by status and DA
+
 ## 0.0.2
 
 ### Patch Changes
