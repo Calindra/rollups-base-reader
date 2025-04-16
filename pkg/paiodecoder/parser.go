@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
-	"github.com/cartesi/rollups-graphql/pkg/commons"
+	"github.com/cartesi/rollups-graphql/v2/pkg/commons"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"

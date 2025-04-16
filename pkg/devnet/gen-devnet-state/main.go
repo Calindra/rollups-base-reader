@@ -11,7 +11,7 @@ import (
 	"log/slog"
 	"os/exec"
 
-	"github.com/cartesi/rollups-graphql/pkg/commons"
+	"github.com/cartesi/rollups-graphql/v2/pkg/commons"
 )
 
 func run(name string, args ...string) {

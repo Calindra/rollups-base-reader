@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/calindra/rollups-base-reader/pkg/model"
-	"github.com/cartesi/rollups-graphql/pkg/commons"
-	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	"github.com/cartesi/rollups-graphql/v2/pkg/commons"
+	cModel "github.com/cartesi/rollups-graphql/v2/pkg/convenience/model"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/mock"

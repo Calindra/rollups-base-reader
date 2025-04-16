@@ -9,9 +9,9 @@ import (
 
 	util "github.com/calindra/rollups-base-reader/pkg/commons"
 	"github.com/calindra/rollups-base-reader/pkg/model"
-	"github.com/cartesi/rollups-graphql/pkg/commons"
-	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
-	"github.com/cartesi/rollups-graphql/pkg/convenience/repository"
+	"github.com/cartesi/rollups-graphql/v2/pkg/commons"
+	cModel "github.com/cartesi/rollups-graphql/v2/pkg/convenience/model"
+	"github.com/cartesi/rollups-graphql/v2/pkg/convenience/repository"
 	"github.com/jmoiron/sqlx"
 )
 

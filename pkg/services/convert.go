@@ -3,7 +3,7 @@ package services
 import (
 	"github.com/calindra/rollups-base-reader/pkg/model"
 	"github.com/calindra/rollups-base-reader/pkg/repository"
-	cModel "github.com/cartesi/rollups-graphql/pkg/convenience/model"
+	cModel "github.com/cartesi/rollups-graphql/v2/pkg/convenience/model"
 )
 
 type Convert struct {
