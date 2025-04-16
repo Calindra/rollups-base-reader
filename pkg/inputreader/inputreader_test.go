@@ -163,5 +163,5 @@ func (s *InputReaderTestSuite) TestZeroResultsFindAllInputsByBlockAndTimestampLT
 	inputs, err := w.FindAllInputsByBlockAndTimestampLT(ctx, client, inputBox, l1FinalizedPrevHeight, (timestamp/1000)-300, []common.Address{appAddress})
 	s.NoError(err)
 	s.NotNil(inputs)
-	s.Equal(0, len(inputs))
+	s.Len(inputs, 0)
 }

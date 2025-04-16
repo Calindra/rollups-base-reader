@@ -105,6 +105,11 @@ type MockAppRepository struct {
 	mock.Mock
 }
 
+// FindAllByStatusAndDA implements repository.AppRepositoryInterface.
+func (m *MockAppRepository) FindAllByStatusAndDA(ctx context.Context, da model.DataAvailabilitySelector, status model.ApplicationState) ([]model.Application, error) {
+	panic("unimplemented")
+}
+
 // Close implements repository.AppRepositoryInterface.
 func (m *MockAppRepository) Close() error {
 	return nil
